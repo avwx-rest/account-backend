@@ -1,0 +1,6 @@
+fastapi~=0.64
+passlib[bcrypt]>=1.7.4
+pyjwt~=2.1
+uvicorn~=0.13
+
+# montydb~=2.1
