@@ -5,20 +5,20 @@ Authentication management views
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials
 
-from account.app import app, mdb
+from account.app import app
 from account.auth import AUTH, SECURITY
-from account.models import AuthModel
+from account.models.user import UserAuth
 
 
 @app.post("/signup")
-def signup(user_details: AuthModel) -> str:
-    user = mdb.users.find_one({"key": user_details.username})
+def signup(user_details: UserAuth) -> str:
+    user = app.db.users.find_one({"key": user_details.email})
     if user != None:
         return "Account already exists"
     try:
         hashed_password = AUTH.encode_password(user_details.password)
-        user = {"key": user_details.username, "password": hashed_password}
-        result = mdb.users.insert_one(user)
+        user = {"key": user_details.email, "password": hashed_password}
+        result = app.db.users.insert_one(user)
         return "Added"
     except:
         error_msg = "Failed to signup user"
@@ -26,10 +26,10 @@ def signup(user_details: AuthModel) -> str:
 
 
 @app.post("/login")
-def login(user_details: AuthModel):
-    user = mdb.users.find_one({"key": user_details.username})
+def login(user_details: UserAuth):
+    user = app.db.users.find_one({"key": user_details.email})
     if user is None:
-        return HTTPException(status_code=401, detail="Invalid username")
+        return HTTPException(status_code=401, detail="Invalid email")
     if not AUTH.verify_password(user_details.password, user["password"]):
         return HTTPException(status_code=401, detail="Invalid password")
 

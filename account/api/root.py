@@ -13,8 +13,8 @@ async def root():
 
 @app.post("/secret")
 @auth_required
-async def secret_data():
-    return "Top Secret data only authorized users can access this info"
+async def secret_data(email: str):
+    return f"Top Secret data that only {email} can access"
 
 
 @app.get("/notsecret")

@@ -6,9 +6,9 @@ Authentication Manager
 # https://github.com/rohanshiva/Deta-FastAPI-JWT-Auth-Blog
 
 # stdlib
+import inspect
 import os
 from datetime import datetime, timedelta
-from functools import wraps
 
 # library
 import jwt
@@ -33,18 +33,18 @@ class Auth:
         """Returns True if hashed passwords match"""
         return self.hasher.verify(password, encoded_password)
 
-    def encode_token(self, username: str) -> bytes:
+    def encode_token(self, email: str) -> bytes:
         now = datetime.utcnow()
         payload = {
             "exp": now + timedelta(days=0, minutes=30),
             "iat": now,
             "scope": "access_token",
-            "sub": username,
+            "sub": email,
         }
         return jwt.encode(payload, self.secret, algorithm="HS256")
 
     def decode_token(self, token: str) -> str:
-        """"""
+        """Returns the email associated with the token if valid"""
         try:
             payload = jwt.decode(token, self.secret, algorithms=["HS256"])
             if payload["scope"] == "access_token":
@@ -73,8 +73,8 @@ class Auth:
         try:
             payload = jwt.decode(refresh_token, self.secret, algorithms=["HS256"])
             if payload["scope"] == "refresh_token":
-                username = payload["sub"]
-                new_token = self.encode_token(username)
+                email = payload["sub"]
+                new_token = self.encode_token(email)
                 return new_token
             raise HTTPException(status_code=401, detail="Invalid scope for token")
         except jwt.ExpiredSignatureError:
@@ -93,25 +93,29 @@ def auth_required(handler):
         credentials: HTTPAuthorizationCredentials = Security(SECURITY), *args, **kwargs
     ):
         token = credentials.credentials
-        if AUTH.decode_token(token):
-            await handler(*args, **kwargs)
+        if email := AUTH.decode_token(token):
+            return await handler(email, *args, **kwargs)
 
     # Fix signature of wrapper
-    import inspect
+    # for func in (handler, wrapper):
+    #     print(inspect.signature(func).parameters.items())
+
+    exempt = (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
 
     wrapper.__signature__ = inspect.Signature(
         parameters=[
-            # Use all parameters from handler
-            *inspect.signature(handler).parameters.values(),
+            # Use all parameters from handler except added email from token
+            *[
+                v
+                for k, v in inspect.signature(handler).parameters.items()
+                if k != "email"
+            ],
             # Skip *args and **kwargs from wrapper parameters:
-            *filter(
-                lambda p: p.kind
-                not in (
-                    inspect.Parameter.VAR_POSITIONAL,
-                    inspect.Parameter.VAR_KEYWORD,
-                ),
-                inspect.signature(wrapper).parameters.values(),
-            ),
+            *[
+                v
+                for v in inspect.signature(wrapper).parameters.values()
+                if v.kind not in exempt
+            ],
         ],
         return_annotation=inspect.signature(handler).return_annotation,
     )
