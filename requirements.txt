@@ -1,4 +1,4 @@
 fastapi~=0.64
-passlib[bcrypt]>=1.7.4
-pyjwt~=2.1
+fastapi-mail~=0.3
+fastapi-users[mongodb]~=6.0
 uvicorn~=0.13
