@@ -24,8 +24,3 @@ app = FastAPI()
 app.db = AsyncIOMotorClient(CONFIG.MONGO_URI, uuidRepresentation="standard").account
 # app.mc = MailChimp(mc_api=CONFIG.MC_KEY, mc_user=CONFIG.MC_USERNAME)
 # app.mail = FastMail(mail_conf)
-
-
-# @app.on_event("shutdown")
-# async def shutdown_event():
-#     app.db.close()

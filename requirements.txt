@@ -1,3 +1,4 @@
+beanie~=1.0
 fastapi~=0.64
 fastapi-mail~=0.3
 fastapi-users[mongodb]~=6.0

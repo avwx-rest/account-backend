@@ -9,15 +9,14 @@ import rollbar
 from mailchimp3.mailchimpclient import MailChimpError
 
 from account import app
+from account.config import CONFIG
 
 
 def add_to_mailing_list(email: str) -> Optional[str]:
     """Add an email to the mailing list. Returns error string if not successful"""
     try:
-        app.mc.lists.members.create(
-            app.config.get("MC_LIST_ID"),
-            {"email_address": email, "status": "subscribed"},
-        )
+        data = {"email_address": email, "status": "subscribed"}
+        app.mc.lists.members.create(CONFIG.MC_LIST_ID, data)
     except MailChimpError as exc:
         data = dict(exc.args[0])
         detail = data.get("detail")
@@ -34,7 +33,7 @@ def delete_from_mailing_list(email: str):
     """Delete an email from the mailing list"""
     try:
         target = hashlib.md5(email.encode("utf-8")).hexdigest()
-        app.mc.lists.members.delete(app.config.get("MC_LIST_ID"), target)
+        app.mc.lists.members.delete(CONFIG.MC_LIST_ID, target)
     except MailChimpError as exc:
         data = dict(exc.args[0])
         if data.get("status") != 404:

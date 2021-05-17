@@ -1,59 +1,39 @@
 """
+Plan document and embedded field
 """
 
-from pydantic.dataclasses import dataclass
+from typing import Optional
 
-from account.app import app
+from beanie import Document, Indexed
+from pydantic import BaseModel
 
 
-@dataclass
-class Plan:
-    key: str
+class PlanBase(BaseModel):
+    """Plan embedded in the User model"""
+
+    key: Indexed(str, unique=True)
     name: str
     type: str
-    stripe_id: str
     description: str
     price: int
     level: int
     limit: int
-    overage: bool = False
+    stripe_id: Optional[str]
 
-    def __repr__(self) -> str:
-        return f"<Plan {self.key}>"
 
-    def __str__(self) -> str:
-        return self.key
+class Plan(Document, PlanBase):
+    """Plan document of primary tiers"""
 
-    def __hash__(self) -> int:
-        return hash(self.key)
-
-    def __eq__(self, other) -> bool:
-        if not other:
-            return False
-        if isinstance(other, str):
-            return self.key == other
-        return self.key == other.key
-
-    def __lt__(self, other) -> bool:
-        if other is None:
-            return False
-        if isinstance(other, int):
-            return self.level < other
-        return self.level < other.level
-
-    def __gt__(self, other) -> bool:
-        if other is None:
-            return True
-        if isinstance(other, int):
-            return self.level > other
-        return self.level > other.level
+    class Collection:
+        name = "plan"
 
     @classmethod
-    def by_key(cls, key: str) -> "Plan":
-        plan = app.db.plan.find_one({"key": key})
-        return cls(**plan)
+    async def default_base(self) -> PlanBase:
+        """Returns the default "free" embedded plan"""
+        plan = await Plan.find_one(Plan.key == "free")
+        return plan.as_embedded()
 
-    @classmethod
-    def by_stripe_id(cls, id: str) -> "Plan":
-        plan = app.db.plan.find_one({"stripe_id": id})
-        return cls(**plan)
+    def as_embedded(self) -> PlanBase:
+        """Returns the Plan document as an embedded plan"""
+        data = {k: getattr(self, k) for k in self.__fields_set__}
+        return PlanBase(**data)

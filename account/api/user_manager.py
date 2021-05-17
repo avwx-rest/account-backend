@@ -1,4 +1,5 @@
 """
+User management and JWT authentication views
 """
 
 from fastapi import Depends, Request, Response
@@ -14,8 +15,10 @@ from account.models.user import User, UserCreate, UserDB, UserUpdate
 user_db = MongoDBUserDatabase(UserDB, app.db.userrr)
 
 
-def on_after_register(user: UserDB, request: Request):
+async def on_after_register(user: UserDB, request: Request):
+    """Complete UserDB creation"""
     print(f"User {user.id} has registered.")
+    await user.set_new_user_defaults()
 
 
 def on_after_forgot_password(user: UserDB, token: str, request: Request):
