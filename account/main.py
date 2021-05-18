@@ -4,8 +4,8 @@ AVWX account management backend
 
 from beanie import init_beanie
 
+from account import views
 from account.app import app
-from account.api import user_manager
 
 from account.models.plan import Plan
 from account.models.user import User
