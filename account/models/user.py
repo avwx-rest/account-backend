@@ -8,9 +8,9 @@ from secrets import token_urlsafe
 from typing import Optional
 
 from beanie import Document
-from fastapi_users import models
 from pydantic import BaseModel, EmailStr, Field
 
+from account.models import usersdb
 from account.models.plan import Plan, PlanBase
 
 
@@ -59,8 +59,11 @@ class Token(BaseModel):
             self._gen()
 
 
-class User(models.BaseUser, Document):
+class User(usersdb.BaseUser, Document):
     """Public fields returned about a user"""
+
+    class Collection:
+        name = "userrr"
 
     # User information
     first_name: Optional[str]
@@ -73,24 +76,28 @@ class User(models.BaseUser, Document):
     allow_overage: bool = False
 
 
-class UserCreate(models.CreateUpdateDictModel):
+class UserCreate(usersdb.CreateUpdateDictModel):
     """Fields necessary to create a new user"""
 
     email: EmailStr
     password: str
 
 
-class UserUpdate(User, models.BaseUserUpdate):
+class UserUpdate(User, usersdb.BaseUserUpdate):
     """Fields the user is allowed to update"""
 
 
-class UserDB(User, models.BaseUserDB):
+class UserDB(User, usersdb.BaseUserDB):
     """Includes private fields in the database model"""
 
     email_confirmed_at: Optional[datetime]
 
     async def set_new_user_defaults(self):
         """Fill computed defaults for a new user"""
-        tasks = [Plan.default_base(), Token.new()]
-        self.plan, token = await aio.gather(*tasks)
-        self.tokens = [token]
+        # tasks = [Plan.default_base(), Token.new()]
+        # plan, token = await aio.gather(*tasks)
+        plan = await Plan.default_base()
+        await self.update({"$set": {
+            UserDB.plan: plan.dict(),
+            # UserDB.tokens: [token.dict()],
+        }})

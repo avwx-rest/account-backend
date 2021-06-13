@@ -11,8 +11,11 @@ from account.util.user_manager import jwt, manager
 
 async def on_after_register(user: UserDB, request: Request):
     """Complete UserDB creation"""
+    # Pull from DB with filled id field. Email is unique
+    new_user = await user.find_one({UserDB.email: user.email})
+    await new_user.set_new_user_defaults()
+    user.plan, user.tokens = new_user.plan, new_user.tokens
     print(f"User {user.id} has registered.")
-    await user.set_new_user_defaults()
 
 
 def on_after_forgot_password(user: UserDB, token: str, request: Request):
