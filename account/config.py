@@ -1,42 +1,40 @@
 """
+FastAPI server configuration
 """
 
-from os import environ
-from dotenv import load_dotenv
+# pylint: disable=too-few-public-methods
 
-load_dotenv()
+from decouple import config
+from pydantic import BaseModel
 
 
-class APPConfig:
+class Settings(BaseModel):
+    """Server config settings"""
 
     # Mongo Engine settings
-    MONGO_URI = "mongodb://localhost:27017/account"
+    mongo_uri = config("MONGO_URI")
 
     # Security settings
-    SECRET_KEY = "change my secret key"
+    authjwt_secret_key = config("SECRET_KEY")
+    salt = config("SALT").encode()
 
     # FastMail SMTP server settings
-    MAIL_SERVER = "smtp.mailgun.org"
-    MAIL_PORT = 587
-    MAIL_USERNAME = "mail username"
-    MAIL_PASSWORD = "mail password"
-    MAIL_SENDER = "noreply@avwx.rest"
+    mail_server = config("MAIL_SERVER", default="smtp.mailgun.org")
+    mail_port = config("MAIL_PORT", default=587, cast=int)
+    mail_username = config("MAIL_USERNAME", default="")
+    mail_password = config("MAIL_PASSWORD", default="")
+    mail_sender = config("MAIL_SENDER", default="noreply@avwx.rest")
 
     # Mailchimp Mailing List
-    MC_KEY = "mc api key"
-    MC_LIST_ID = "mc mailing list"
-    MC_USERNAME = "mc username"
+    mc_key = config("MC_KEY", default="")
+    mc_list_id = config("MC_LIST_ID", default="")
+    mc_username = config("MC_USERNAME", default="")
 
     # Stripe Payments
-    ROOT_URL = "http://use.ngrok.for.this.locally/"
-    STRIPE_PUB_KEY = "stripe public key"
-    STRIPE_SECRET_KEY = "stripe secret key"
-    STRIPE_SIGN_SECRET = "stripe webhook signing key"
-
-    def __init__(self) -> None:
-        for key in ("MONGO_URI", "SECRET_KEY", "MAIL_USERNAME", "MAIL_PASSWORD"):
-            if value := environ.get(key):
-                setattr(self, key, value)
+    root_url = config("ROOT_URL", default="http://use.ngrok.for.this.locally/")
+    stripe_pub_key = config("STRIPE_PUB_KEY", default="")
+    stripe_secret_key = config("STRIPE_SECRET_KEY", default="")
+    stripe_sign_secret = config("STRIPE_SIGN_SECRET", default="")
 
 
-CONFIG = APPConfig()
+CONFIG = Settings()

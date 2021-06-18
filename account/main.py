@@ -1,21 +1,16 @@
 """
-AVWX account management backend
+Server main runtime
 """
 
-from beanie import init_beanie
+# pylint: disable=unused-import,import-error
 
-from account import views
+from account import jwt
 from account.app import app
-
-from account.models.plan import Plan
-from account.models.user import User
-
-
-@app.on_event("startup")
-async def app_init():
-    await init_beanie(app.db, document_models=[Plan, User])
+from account.routes.auth import router as AuthRouter
+from account.routes.register import router as RegisterRouter
+from account.routes.user import router as UserRouter
 
 
-# @app.on_event("shutdown")
-# async def shutdown_event():
-#     app.db.close()
+app.include_router(AuthRouter, prefix="/auth", tags=["Auth"])
+app.include_router(RegisterRouter, prefix="/register", tags=["Register"])
+app.include_router(UserRouter, prefix="/user", tags=["User"])
