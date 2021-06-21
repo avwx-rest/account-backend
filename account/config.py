@@ -19,6 +19,7 @@ class Settings(BaseModel):
     salt = config("SALT").encode()
 
     # FastMail SMTP server settings
+    mail_console = config("MAIL_CONSOLE", default=False, cast=bool)
     mail_server = config("MAIL_SERVER", default="smtp.mailgun.org")
     mail_port = config("MAIL_PORT", default=587, cast=int)
     mail_username = config("MAIL_USERNAME", default="")
@@ -31,7 +32,7 @@ class Settings(BaseModel):
     mc_username = config("MC_USERNAME", default="")
 
     # Stripe Payments
-    root_url = config("ROOT_URL", default="http://use.ngrok.for.this.locally/")
+    root_url = config("ROOT_URL", default="http://use.ngrok.for.this.locally")
     stripe_pub_key = config("STRIPE_PUB_KEY", default="")
     stripe_secret_key = config("STRIPE_SECRET_KEY", default="")
     stripe_sign_secret = config("STRIPE_SIGN_SECRET", default="")
