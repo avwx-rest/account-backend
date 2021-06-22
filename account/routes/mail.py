@@ -14,7 +14,7 @@ from account.util.mail import send_verification_email
 from account.util.mailing import add_to_mailing, remove_from_mailing
 
 
-router = APIRouter()
+router = APIRouter(prefix="/mail", tags=["Mail"])
 
 
 @router.post("/verify")

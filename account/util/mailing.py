@@ -3,7 +3,6 @@ Mailing list manager
 """
 
 import hashlib
-from typing import Tuple
 
 import rollbar
 from mailchimp3 import MailChimp
@@ -20,7 +19,7 @@ chimp = MailChimp(mc_api=CONFIG.mc_key, mc_user=CONFIG.mc_username)
 class MailingKew(Kew):
     """Mailing list queue manager"""
 
-    async def worker(self, data: Tuple[User, bool]) -> bool:
+    async def worker(self, data: tuple[User, bool]) -> bool:
         """Queue worker to add/remove subscriber and update"""
         user, add = data
         handler = _add_to_mailing if add else _remove_from_mailing

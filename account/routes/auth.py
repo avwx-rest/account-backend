@@ -14,7 +14,7 @@ from account.models.user import User, UserAuth
 from account.util.password import hash_password
 
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 class AccessToken(BaseModel):

@@ -23,14 +23,19 @@ class Stripe(BaseModel):
     subscription_id: str
 
 
-class Token(BaseModel):
-    """API token"""
+class TokenOut(BaseModel):
+    """Token fields returned to the user"""
 
-    _id: ObjectId
     name: str
     type: str
     value: str
     active: bool = True
+
+
+class Token(TokenOut):
+    """API token"""
+
+    _id: ObjectId
 
     async def is_unique(self) -> bool:
         """Checks if the current token.value is unique"""
@@ -74,7 +79,7 @@ class UserAuth(BaseModel):
 class UserUpdate(BaseModel):
     """User-updatable fields"""
 
-    email: EmailStr
+    email: Optional[EmailStr] = None
 
     # User information
     first_name: Optional[str] = None
