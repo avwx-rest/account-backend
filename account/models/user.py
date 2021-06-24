@@ -9,11 +9,13 @@ from secrets import token_urlsafe
 from typing import Optional
 
 from beanie import Document, Indexed
-from bson import ObjectId
+from bson.objectid import ObjectId
 from pydantic import BaseModel, EmailStr, Field
 
 from account.models.addon import Addon
+from account.models.helpers import ObjectIdStr
 from account.models.plan import Plan, PlanOut
+from account.models.token import Token
 
 
 class Stripe(BaseModel):
@@ -23,19 +25,10 @@ class Stripe(BaseModel):
     subscription_id: str
 
 
-class TokenOut(BaseModel):
-    """Token fields returned to the user"""
-
-    name: str
-    type: str
-    value: str
-    active: bool = True
-
-
-class Token(TokenOut):
+class UserToken(Token):
     """API token"""
 
-    _id: ObjectId
+    id: ObjectIdStr = Field(default_factory=ObjectId, alias="_id")
 
     async def is_unique(self) -> bool:
         """Checks if the current token.value is unique"""
@@ -46,7 +39,7 @@ class Token(TokenOut):
         value = token_urlsafe(32)
         if self.type == "dev":
             value = "dev-" + value[4:]
-        self.value = value
+        self.value = value  # pylint: disable=attribute-defined-outside-init
 
     @classmethod
     async def new(cls, name: str = "Token", type: str = "app"):
@@ -77,7 +70,7 @@ class UserAuth(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    """User-updatable fields"""
+    """Updatable user fields"""
 
     email: Optional[EmailStr] = None
 
@@ -94,7 +87,7 @@ class UserOut(UserUpdate):
     # API and Payment information
     stripe: Optional[Stripe] = None
     plan: Optional[PlanOut] = None
-    tokens: list[Token] = Field(default=[])
+    tokens: list[UserToken] = Field(default=[])
     addons: list[Addon] = Field(default=[])
     allow_overage: bool = False
 
@@ -146,3 +139,10 @@ class User(Document, UserOut):
     async def add_default_documents(self) -> None:
         """Adds initial embedded documents"""
         self.plan = await Plan.by_key("free")
+
+    def get_token(self, value: str) -> tuple[int, Optional[UserToken]]:
+        """Returns a token and index by its string value"""
+        for i, token in enumerate(self.tokens):
+            if token.value == value:
+                return i, token
+        return -1, None

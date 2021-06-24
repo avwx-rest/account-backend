@@ -11,6 +11,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from account.config import CONFIG
 from account.models.addon import Addon
 from account.models.plan import Plan
+from account.models.token import TokenUsage
 from account.models.user import User
 
 
@@ -21,4 +22,4 @@ app.db = AsyncIOMotorClient(CONFIG.mongo_uri).account
 @app.on_event("startup")
 async def app_init():
     """Initialize application services"""
-    await init_beanie(app.db, document_models=[Addon, Plan, User])
+    await init_beanie(app.db, document_models=[Addon, Plan, TokenUsage, User])
