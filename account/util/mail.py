@@ -33,3 +33,18 @@ async def send_verification_email(email: str, token: str):
             body="Welcome to AVWX! We just need to verify your email to begin: " + url,
         )
         await mail.send_message(message)
+
+
+async def send_password_reset_email(email: str, token: str):
+    """Sends password reset email"""
+    # Change this later to public endpoint
+    url = CONFIG.root_url + "/register/reset-password/" + token
+    if CONFIG.mail_console:
+        print("POST to " + url)
+    else:
+        message = MessageSchema(
+            recipients=[email],
+            subject="AVWX Password Reset",
+            body=f"Click the link to reset your AVWX account password: {url}\nIf you did not request this, please ignore this email",
+        )
+        await mail.send_message(message)
