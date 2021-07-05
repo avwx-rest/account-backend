@@ -1,17 +1,31 @@
 """
+Authentication tests
 """
 
 import pytest
 from httpx import AsyncClient
 
-from tests.setup import get_test_app
+from tests.data import add_empty_user
+from tests.util import auth_headers
 
-app = get_test_app()
 
 @pytest.mark.asyncio
-async def test_root():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        data = {"username": "test1", "password": "testing1"}
-        response = await ac.post("/login", data=data)
-    assert response.status_code == 200
-    assert response.json() == {"": None}
+async def test_user_get(client: AsyncClient) -> None:
+    """Test user endpoint returns authorized user"""
+    await add_empty_user()
+    email = "empty@test.io"
+    auth = await auth_headers(client, email)
+    resp = await client.get("/user", headers=auth)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["email"] == email
+
+
+@pytest.mark.asyncio
+async def test_not_authorized(client: AsyncClient) -> None:
+    """Test user not authorized if required"""
+    resp = await client.get("/user")
+    assert resp.status_code == 401
+    headers = {"AUTHORIZATION": "Bearer eyJ0eXAiOiJKV1QiLCJhbG"}
+    resp = await client.get("/user", headers=headers)
+    assert resp.status_code == 422

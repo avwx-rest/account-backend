@@ -29,12 +29,14 @@ class MailingKew(Kew):
         return True
 
 
-kew = MailingKew()
+if not CONFIG.testing:
+    kew = MailingKew()
 
 
-async def add_to_mailing(user: User) -> bool:
+async def add_to_mailing(user: User) -> None:
     """Add an email to the mailing list"""
-    await kew.add((user, True))
+    if not CONFIG.testing:
+        await kew.add((user, True))
 
 
 def _add_to_mailing(email: str) -> bool:
@@ -57,7 +59,8 @@ def _add_to_mailing(email: str) -> bool:
 
 async def remove_from_mailing(user: User) -> None:
     """Delete an email from the mailing list"""
-    await kew.add((user, False))
+    if not CONFIG.testing:
+        await kew.add((user, False))
 
 
 def _remove_from_mailing(email: str) -> bool:

@@ -6,3 +6,13 @@ AVWX account management backend service
 ```bash
 uvicorn account.main:app --reload --port 8080
 ```
+
+## Test
+
+```bash
+docker run -d mongo
+```
+
+```bash
+pytest
+```

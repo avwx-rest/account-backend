@@ -37,5 +37,7 @@ class Settings(BaseModel):
     stripe_secret_key = config("STRIPE_SECRET_KEY", default="")
     stripe_sign_secret = config("STRIPE_SIGN_SECRET", default="")
 
+    testing = config("TESTING", default=False, cast=bool)
+
 
 CONFIG = Settings()

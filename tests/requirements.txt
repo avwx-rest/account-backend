@@ -1,3 +1,4 @@
+asgi-lifespan~=1.0
 httpx~=0.18
 montydb~=2.1
 pytest-asyncio>=0.15.1

@@ -16,10 +16,10 @@ from account.models.user import User
 
 
 app = FastAPI()
-app.db = AsyncIOMotorClient(CONFIG.mongo_uri).account
 
 
 @app.on_event("startup")
 async def app_init():
     """Initialize application services"""
+    app.db = AsyncIOMotorClient(CONFIG.mongo_uri).account
     await init_beanie(app.db, document_models=[Addon, Plan, TokenUsage, User])
