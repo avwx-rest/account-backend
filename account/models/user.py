@@ -4,7 +4,7 @@ User models
 
 # pylint: disable=too-few-public-methods,redefined-builtin,invalid-name
 
-from datetime import datetime
+from datetime import datetime, timezone
 from secrets import token_urlsafe
 from typing import Optional
 
@@ -23,6 +23,15 @@ class Stripe(BaseModel):
 
     customer_id: str
     subscription_id: str
+
+
+class Notification(BaseModel):
+    """User notification"""
+
+    type: str
+    text: str
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    id: ObjectIdStr = Field(default_factory=ObjectId, alias="_id")
 
 
 class UserToken(Token):
@@ -89,8 +98,9 @@ class UserOut(UserUpdate):
     plan: Optional[PlanOut] = None
     tokens: list[UserToken] = Field(default=[])
     addons: list[Addon] = Field(default=[])
-    allow_overage: bool = False
+    notifications: list[Notification] = Field(default=[])
 
+    allow_overage: bool = False
     subscribed: bool = False
     disabled: bool = False
 
@@ -145,4 +155,12 @@ class User(Document, UserOut):
         for i, token in enumerate(self.tokens):
             if token.value == value:
                 return i, token
+        return -1, None
+
+    def get_notification(self, value: str) -> tuple[int, Optional[Notification]]:
+        """Returns a notification and index by its string value"""
+        target = ObjectId(value)
+        for i, notification in enumerate(self.notifications):
+            if notification.id == target:
+                return i, notification
         return -1, None

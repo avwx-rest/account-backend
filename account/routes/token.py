@@ -12,7 +12,7 @@ from account.models.user import User, UserToken
 router = APIRouter(prefix="/token", tags=["Token"])
 
 
-@router.get("/", response_model=list[Token])
+@router.get("", response_model=list[Token])
 async def get_user_tokens(auth: AuthJWT = Depends()):
     """Returns the current user's tokens"""
     auth.jwt_required()
@@ -20,7 +20,7 @@ async def get_user_tokens(auth: AuthJWT = Depends()):
     return user.tokens
 
 
-@router.post("/", response_model=Token)
+@router.post("", response_model=Token)
 async def new_token(auth: AuthJWT = Depends()):
     """Creates a new user token"""
     auth.jwt_required()
@@ -38,7 +38,7 @@ async def get_token(value: str, auth: AuthJWT = Depends()):
     user = await User.by_email(auth.get_jwt_subject())
     _, token = user.get_token(value)
     if token is None:
-        raise HTTPException(400, f"Token with value {value} does not exist")
+        raise HTTPException(404, f"Token with value {value} does not exist")
     return token
 
 
@@ -49,7 +49,7 @@ async def update_token(value: str, update: TokenUpdate, auth: AuthJWT = Depends(
     user = await User.by_email(auth.get_jwt_subject())
     i, token = user.get_token(value)
     if token is None:
-        raise HTTPException(400, f"Token with value {value} does not exist")
+        raise HTTPException(404, f"Token with value {value} does not exist")
     token = token.copy(update=update.dict(exclude_unset=True))
     user.tokens[i] = token
     await user.save()
@@ -63,7 +63,7 @@ async def delete_token(value: str, auth: AuthJWT = Depends()):
     user = await User.by_email(auth.get_jwt_subject())
     i, token = user.get_token(value)
     if token is None:
-        raise HTTPException(400, f"Token with value {value} does not exist")
+        raise HTTPException(404, f"Token with value {value} does not exist")
     user.tokens.pop(i)
     await user.save()
     return Response(status_code=204)
@@ -76,7 +76,7 @@ async def refresh_token(value: str, auth: AuthJWT = Depends()):
     user = await User.by_email(auth.get_jwt_subject())
     i, token = user.get_token(value)
     if token is None:
-        raise HTTPException(400, f"Token with value {value} does not exist")
+        raise HTTPException(404, f"Token with value {value} does not exist")
     await user.tokens[i].refresh()
     await user.save()
     return user.tokens[i]

@@ -13,7 +13,7 @@ from account.util.password import hash_password
 router = APIRouter(prefix="/register", tags=["Register"])
 
 
-@router.post("/", response_model=UserOut)
+@router.post("", response_model=UserOut)
 async def user_registration(user_auth: UserAuth):
     """Creates a new user"""
     user = await User.by_email(user_auth.email)
