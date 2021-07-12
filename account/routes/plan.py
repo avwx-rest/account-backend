@@ -3,19 +3,17 @@ Plan router
 """
 
 from fastapi import APIRouter, Depends
-from fastapi_jwt_auth import AuthJWT
 
 from account.models.plan import Plan, PlanOut
 from account.models.user import User
+from account.util.current_user import current_user
 
 router = APIRouter(tags=["Plan"])
 
 
 @router.get("/plan", response_model=PlanOut)
-async def get_user_plan(auth: AuthJWT = Depends()):
+async def get_user_plan(user: User = Depends(current_user)):
     """Returns the current user's plan"""
-    auth.jwt_required()
-    user = await User.by_email(auth.get_jwt_subject())
     return user.plan
 
 

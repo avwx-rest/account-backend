@@ -2,29 +2,24 @@
 Token management router
 """
 
-from fastapi import APIRouter, Depends, Response
-from fastapi.exceptions import HTTPException
-from fastapi_jwt_auth import AuthJWT
+from fastapi import APIRouter, Depends, HTTPException, Response
 
 from account.models.token import Token, TokenUpdate, TokenUsage, TokenUsageOut
 from account.models.user import User, UserToken
+from account.util.current_user import current_user
 
 router = APIRouter(prefix="/token", tags=["Token"])
 
 
 @router.get("", response_model=list[Token])
-async def get_user_tokens(auth: AuthJWT = Depends()):
+async def get_user_tokens(user: User = Depends(current_user)):
     """Returns the current user's tokens"""
-    auth.jwt_required()
-    user = await User.by_email(auth.get_jwt_subject())
     return user.tokens
 
 
 @router.post("", response_model=Token)
-async def new_token(auth: AuthJWT = Depends()):
+async def new_token(user: User = Depends(current_user)):
     """Creates a new user token"""
-    auth.jwt_required()
-    user = await User.by_email(auth.get_jwt_subject())
     token = await UserToken.new()
     user.tokens.append(token)
     await user.save()
@@ -32,10 +27,8 @@ async def new_token(auth: AuthJWT = Depends()):
 
 
 @router.get("/{value}", response_model=Token)
-async def get_token(value: str, auth: AuthJWT = Depends()):
+async def get_token(value: str, user: User = Depends(current_user)):
     """Returns token details by string value"""
-    auth.jwt_required()
-    user = await User.by_email(auth.get_jwt_subject())
     _, token = user.get_token(value)
     if token is None:
         raise HTTPException(404, f"Token with value {value} does not exist")
@@ -43,10 +36,10 @@ async def get_token(value: str, auth: AuthJWT = Depends()):
 
 
 @router.patch("/{value}", response_model=Token)
-async def update_token(value: str, update: TokenUpdate, auth: AuthJWT = Depends()):
+async def update_token(
+    value: str, update: TokenUpdate, user: User = Depends(current_user)
+):
     """Updates token details by string value"""
-    auth.jwt_required()
-    user = await User.by_email(auth.get_jwt_subject())
     i, token = user.get_token(value)
     if token is None:
         raise HTTPException(404, f"Token with value {value} does not exist")
@@ -57,10 +50,8 @@ async def update_token(value: str, update: TokenUpdate, auth: AuthJWT = Depends(
 
 
 @router.delete("/{value}", response_model=Token)
-async def delete_token(value: str, auth: AuthJWT = Depends()):
+async def delete_token(value: str, user: User = Depends(current_user)):
     """Deletes a token by string value"""
-    auth.jwt_required()
-    user = await User.by_email(auth.get_jwt_subject())
     i, token = user.get_token(value)
     if token is None:
         raise HTTPException(404, f"Token with value {value} does not exist")
@@ -70,10 +61,8 @@ async def delete_token(value: str, auth: AuthJWT = Depends()):
 
 
 @router.post("/{value}/refresh", response_model=Token)
-async def refresh_token(value: str, auth: AuthJWT = Depends()):
+async def refresh_token(value: str, user: User = Depends(current_user)):
     """Refreshes token value by string value"""
-    auth.jwt_required()
-    user = await User.by_email(auth.get_jwt_subject())
     i, token = user.get_token(value)
     if token is None:
         raise HTTPException(404, f"Token with value {value} does not exist")
@@ -83,9 +72,7 @@ async def refresh_token(value: str, auth: AuthJWT = Depends()):
 
 
 @router.get("/{value}/history", response_model=list[TokenUsageOut])
-async def get_token_history(value: str, auth: AuthJWT = Depends()):
+async def get_token_history(value: str, user: User = Depends(current_user)):
     """Return a token's usage history"""
-    auth.jwt_required()
-    user = await User.by_email(auth.get_jwt_subject())
     _, token = user.get_token(value)
     return await TokenUsage.find(TokenUsage.token_id == token.id).to_list()

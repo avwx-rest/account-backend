@@ -4,12 +4,12 @@ Email router
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Body, Depends, Response
-from fastapi.exceptions import HTTPException
-from fastapi_jwt_auth import AuthJWT
+from fastapi import APIRouter, Body, Depends, HTTPException, Response
+from fastapi_jwt_auth.auth_jwt import AuthJWT
 from pydantic import EmailStr
 
 from account.models.user import User
+from account.util.current_user import current_user
 from account.util.mail import send_verification_email
 from account.util.mailing import add_to_mailing, remove_from_mailing
 
@@ -48,10 +48,8 @@ async def verify_email(token: str, auth: AuthJWT = Depends()):
 
 
 @router.post("/list")
-async def add_to_mailing_list(auth: AuthJWT = Depends()):
+async def add_to_mailing_list(user: User = Depends(current_user)):
     """Add the user to the mailing list"""
-    auth.jwt_required()
-    user = await User.by_email(auth.get_jwt_subject())
     if user.subscribed:
         raise HTTPException(400, "User is already subscribed")
     await add_to_mailing(user)
@@ -59,10 +57,8 @@ async def add_to_mailing_list(auth: AuthJWT = Depends()):
 
 
 @router.delete("/list")
-async def remove_from_mailing_list(auth: AuthJWT = Depends()):
+async def remove_from_mailing_list(user: User = Depends(current_user)):
     """Remove the user from the mailing list"""
-    auth.jwt_required()
-    user = await User.by_email(auth.get_jwt_subject())
     if not user.subscribed:
         raise HTTPException(400, "User is already unsubscribed")
     await remove_from_mailing(user)

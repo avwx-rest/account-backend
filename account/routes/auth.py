@@ -4,31 +4,15 @@ Authentication router
 
 # pylint: disable=too-few-public-methods
 
-from datetime import timedelta
-
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi_jwt_auth import AuthJWT
-from pydantic import BaseModel
 
+from account.models.auth import AccessToken, RefreshToken
 from account.models.user import User, UserAuth
 from account.util.password import hash_password
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
-
-
-class AccessToken(BaseModel):
-    """Access token details"""
-
-    access_token: str
-    access_token_expires: timedelta = timedelta(minutes=15)
-
-
-class RefreshToken(AccessToken):
-    """Access and refresh token details"""
-
-    refresh_token: str
-    refresh_token_expires: timedelta = timedelta(days=30)
 
 
 @router.post("/login")
