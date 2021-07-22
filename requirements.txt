@@ -1,6 +1,10 @@
+bcrypt~=3.2
 beanie~=1.1
 fastapi~=0.64
 fastapi-jwt-auth~=0.5
 fastapi-mail~=0.3
+kewkew~=0.1
+mailchimp3~=3.0
 python-decouple~=3.4
+rollbar~=0.16
 uvicorn~=0.13

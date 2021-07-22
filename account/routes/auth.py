@@ -2,8 +2,6 @@
 Authentication router
 """
 
-# pylint: disable=too-few-public-methods
-
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi_jwt_auth import AuthJWT
 
@@ -18,9 +16,9 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 @router.post("/login")
 async def login(user_auth: UserAuth, auth: AuthJWT = Depends()):
     """Authenticates and returns the user's JWT"""
-    user = await User.find_one(User.email == user_auth.email)
-    if not user or hash_password(user_auth.password) != user.password:
-        raise HTTPException(status_code=401, detail="Bad username or password")
+    user = await User.by_email(user_auth.email)
+    if user is None or hash_password(user_auth.password) != user.password:
+        raise HTTPException(status_code=401, detail="Bad email or password")
     access_token = auth.create_access_token(subject=user.email)
     refresh_token = auth.create_refresh_token(subject=user.email)
     return RefreshToken(access_token=access_token, refresh_token=refresh_token)
