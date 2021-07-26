@@ -2,6 +2,7 @@
 Token management router
 """
 
+from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from account.models.token import Token, TokenUpdate, TokenUsage, TokenUsageOut
@@ -75,4 +76,4 @@ async def refresh_token(value: str, user: User = Depends(current_user)):
 async def get_token_history(value: str, user: User = Depends(current_user)):
     """Return a token's usage history"""
     _, token = user.get_token(value)
-    return await TokenUsage.find(TokenUsage.token_id == token.id).to_list()
+    return await TokenUsage.find(TokenUsage.token_id == ObjectId(token.id)).to_list()

@@ -39,6 +39,7 @@ class TokenUsage(Document, TokenUsageOut):
 
     token_id: PydanticObjectId
     user_id: PydanticObjectId
+    date: datetime
     updated: datetime
 
     class Collection:

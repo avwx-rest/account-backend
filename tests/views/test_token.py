@@ -2,6 +2,8 @@
 Token management tests
 """
 
+from datetime import date
+
 import pytest
 from httpx import AsyncClient
 
@@ -15,6 +17,13 @@ def assert_app_token(token: dict, name: str = "Token", active: bool = True) -> N
     assert token["type"] == "app"
     assert type(token["value"]) == str
     assert token["active"] == active
+
+
+def assert_token_history(history: dict) -> None:
+    """Checks token usage fields"""
+    assert type(history["count"]) == int
+    assert type(history["date"]) == str
+    date.fromisoformat(history["date"])
 
 
 async def get_token(client: AsyncClient, auth: dict, index: int = 0) -> dict:
@@ -127,3 +136,18 @@ async def test_token_refresh(client: AsyncClient) -> None:
     new_token = resp.json()
     assert_app_token(new_token)
     assert token == new_token
+
+
+@pytest.mark.asyncio
+async def test_token_history(client: AsyncClient) -> None:
+    """Test fetching a user's token usage history"""
+    email = await add_token_user(history=True)
+    auth = await auth_headers(client, email)
+    value = (await get_token(client, auth))["value"]
+    # Fetch single token history
+    resp = await client.get(f"/token/{value}/history", headers=auth)
+    assert resp.status_code == 200
+    history: list[dict] = resp.json()
+    assert len(history) == 3
+    for item in history:
+        assert_token_history(item)
