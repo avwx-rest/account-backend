@@ -3,11 +3,18 @@ Test data handlers
 """
 
 import asyncio as aio
+import json
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
+from account.models.plan import Plan
 from account.models.token import TokenUsage
 from account.models.user import User, UserToken
 from account.util.password import hash_password
+
+
+DATA = Path(__file__).parent / "data"
+PLANS = json.load(DATA.joinpath("plans.json").open())
 
 
 async def add_empty_user() -> str:
@@ -48,3 +55,9 @@ async def add_token_user(history: bool = False) -> str:
             tasks.append(usage.create())
         await aio.gather(*tasks)
     return email
+
+
+async def add_plans(*keys: str) -> None:
+    """Add plans by key value"""
+    tasks = [Plan(**PLANS[key]).create() for key in keys]
+    await aio.gather(*tasks)

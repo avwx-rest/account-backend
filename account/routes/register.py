@@ -32,8 +32,8 @@ async def forgot_password(
 ):
     """Sends password reset email"""
     user = await User.by_email(email)
-    if user.email_confirmed_at is not None:
-        raise HTTPException(400, "Email is already verified")
+    if user.email_confirmed_at is None:
+        raise HTTPException(400, "Email is not yet verified")
     if user.disabled:
         raise HTTPException(400, "Your account is disabled")
     token = auth.create_access_token(user.email)
@@ -49,8 +49,8 @@ async def reset_password(
     # Manually assign the token value
     auth._token = token  # pylint: disable=protected-access
     user = await User.by_email(auth.get_jwt_subject())
-    if user.email_confirmed_at is not None:
-        raise HTTPException(400, "Email is already verified")
+    if user.email_confirmed_at is None:
+        raise HTTPException(400, "Email is not yet verified")
     if user.disabled:
         raise HTTPException(400, "Your account is disabled")
     user.password = hash_password(password)

@@ -26,13 +26,6 @@ def assert_token_history(history: dict) -> None:
     date.fromisoformat(history["date"])
 
 
-async def get_token(client: AsyncClient, auth: dict, index: int = 0) -> dict:
-    """Returns an existing token"""
-    resp = await client.get("/token", headers=auth)
-    assert resp.status_code == 200
-    return resp.json()[index]
-
-
 async def assert_token_count(client: AsyncClient, auth: dict, count: int) -> None:
     """Asserts that the user has the expected number of tokens"""
     resp = await client.get("/token", headers=auth)
@@ -40,6 +33,13 @@ async def assert_token_count(client: AsyncClient, auth: dict, count: int) -> Non
     data = resp.json()
     assert type(data) == list
     assert len(data) == count
+
+
+async def get_token(client: AsyncClient, auth: dict, index: int = 0) -> dict:
+    """Returns an existing token"""
+    resp = await client.get("/token", headers=auth)
+    assert resp.status_code == 200
+    return resp.json()[index]
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,12 @@
+{
+    "free": {
+        "key": "free",
+        "name": "Hobby",
+        "type": "free",
+        "description": "AVWX Hobby",
+        "price": 0,
+        "level": 0,
+        "limit": 4000,
+        "overage": false
+    }
+}
