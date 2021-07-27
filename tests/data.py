@@ -10,7 +10,7 @@ from typing import Optional
 
 from account.models.plan import Plan
 from account.models.token import TokenUsage
-from account.models.user import User, UserToken
+from account.models.user import Notification, User, UserToken
 from account.util.password import hash_password
 
 
@@ -65,6 +65,14 @@ async def add_plan_user(plan: str = "free") -> str:
     """Add user with a specific plan to user collection"""
     user = make_user(f"plan-{plan}@test.io")
     user.plan = await Plan.by_key(plan)
+    await user.create()
+    return user.email
+
+
+async def add_notification_user(*text: str) -> str:
+    """Add user with notifications to user collection"""
+    user = make_user("notification@test.io")
+    user.notifications = [Notification(type="app", text=t) for t in text]
     await user.create()
     return user.email
 

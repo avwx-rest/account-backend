@@ -31,7 +31,7 @@ class Notification(BaseModel):
     type: str
     text: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
-    id: ObjectIdStr = Field(default_factory=ObjectId, alias="_id")
+    id: ObjectIdStr = Field(default_factory=ObjectId)
 
 
 class UserToken(Token):
@@ -159,8 +159,7 @@ class User(Document, UserOut):
 
     def get_notification(self, value: str) -> tuple[int, Optional[Notification]]:
         """Returns a notification and index by its string value"""
-        target = ObjectId(value)
         for i, notification in enumerate(self.notifications):
-            if notification.id == target:
+            if notification.id == value:
                 return i, notification
         return -1, None
