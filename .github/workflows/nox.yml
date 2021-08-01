@@ -18,4 +18,6 @@ jobs:
           SALT: ${{ secrets.SALT }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           TEST_MONGO_URI: ${{ secrets.TEST_MONGO_URI }}
+          MC_KEY: ${{ secrets.MC_KEY }}
+          MC_USERNAME: ${{ secrets.MC_USERNAME }}
         run: nox
