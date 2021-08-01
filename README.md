@@ -1,5 +1,10 @@
 # account-backend
+
+[![Nox](https://github.com/avwx-rest/account-backend/actions/workflows/nox.yml/badge.svg)](https://github.com/avwx-rest/account-backend/actions/workflows/nox.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 AVWX account management backend service
+
 
 ## Intro
 
@@ -10,6 +15,8 @@ The AVWX Account API runs on top of a [MongoDB]() store with the following featu
 - Password reset
 - JWT auth login and refresh
 - User model CRUD
+- Token management and usage
+- Stripe Checkout integration
 
 It's built on top of these libraries to provide those features:
 
@@ -46,6 +53,13 @@ uvicorn account.main:app --reload --port 8080
 ```
 
 Your API should now be available at http://localhost:8080
+
+You can also let Docker manage the Python runtime if you want to. Just make sure you found a way to set the salt in the environment variables.
+
+```bash
+docker build -t avwx-account .
+docker run -p 8080:8080 avwx-account
+```
 
 ## Test
 
