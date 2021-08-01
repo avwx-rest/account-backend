@@ -9,14 +9,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Env Setup
+      - name: Setup Nox
+        uses: excitedleigh/setup-nox@v2.0.0
+      - name: Run Nox
         env:
           MAIL_CONSOLE: true
           MONGO_URI: none
           SALT: ${{ secrets.SALT }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           TEST_MONGO_URI: ${{ secrets.TEST_MONGO_URI }}
-      - name: Setup Nox
-        uses: excitedleigh/setup-nox@v2.0.0
-      - name: Run Nox
         run: nox
