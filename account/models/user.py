@@ -115,7 +115,7 @@ class User(Document, UserOut):
     class Collection:
         """DB collection name"""
 
-        name = "userrr"
+        name = "user"
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"

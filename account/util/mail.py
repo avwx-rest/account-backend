@@ -20,6 +20,25 @@ mail_conf = ConnectionConfig(
 mail = FastMail(mail_conf)
 
 
+VERIFY_TEMPLATE = """
+Welcome to AVWX!
+
+We just need to verify your email to begin.
+Click the link below to continue.
+
+{}
+"""
+
+
+RESET_TEMPLATE = """
+Click the link to reset your AVWX account password:
+
+{}
+
+If you did not request this, please ignore this email
+"""
+
+
 async def send_verification_email(email: str, token: str):
     """Send user verification email"""
     # Change this later to public endpoint
@@ -30,7 +49,7 @@ async def send_verification_email(email: str, token: str):
         message = MessageSchema(
             recipients=[email],
             subject="AVWX Email Verification",
-            body="Welcome to AVWX! We just need to verify your email to begin: " + url,
+            body=VERIFY_TEMPLATE.format(url),
         )
         await mail.send_message(message)
 
@@ -45,6 +64,6 @@ async def send_password_reset_email(email: str, token: str):
         message = MessageSchema(
             recipients=[email],
             subject="AVWX Password Reset",
-            body=f"Click the link to reset your AVWX account password: {url}\nIf you did not request this, please ignore this email",
+            body=RESET_TEMPLATE.format(url),
         )
         await mail.send_message(message)

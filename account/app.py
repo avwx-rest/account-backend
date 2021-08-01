@@ -15,7 +15,31 @@ from account.models.token import TokenUsage
 from account.models.user import User
 
 
-app = FastAPI()
+DESCRIPTION = """
+This API powers the account management portal
+
+It supports:
+
+- Account sign-up and management
+- API token management and usage history
+- API plan and Stripe subscription assignment
+"""
+
+
+app = FastAPI(
+    title="AVWX Account API",
+    description=DESCRIPTION,
+    version="0.0.1",
+    contact={
+        "name": "Michael duPont",
+        "url": "https://avwx.rest",
+        "email": "michael@dupont.dev",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://github.com/avwx-rest/account-backend/blob/main/LICENSE",
+    },
+)
 
 
 @app.on_event("startup")
