@@ -47,3 +47,14 @@ async def app_init():
     """Initialize application services"""
     app.db = AsyncIOMotorClient(CONFIG.mongo_uri).account
     await init_beanie(app.db, document_models=[Addon, Plan, TokenUsage, User])
+
+
+# Rollbar error logging middleware
+if CONFIG.log_key:
+    import rollbar
+    from rollbar.contrib.fastapi import ReporterMiddleware
+
+    rollbar.init(
+        CONFIG.log_key, "avwx_account", environment="production", handler="async"
+    )
+    app.add_middleware(ReporterMiddleware)
