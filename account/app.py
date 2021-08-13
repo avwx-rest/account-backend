@@ -55,6 +55,6 @@ if CONFIG.log_key:
     from rollbar.contrib.fastapi import ReporterMiddleware
 
     rollbar.init(
-        CONFIG.log_key, "avwx_account", environment="production", handler="async"
+        CONFIG.log_key, environment="production", handler="async"
     )
     app.add_middleware(ReporterMiddleware)
