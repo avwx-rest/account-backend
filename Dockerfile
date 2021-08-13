@@ -28,4 +28,4 @@ COPY ./account ./account
 USER user
 
 # Run the application
-CMD ["uvicorn", "account.main:app", "--port", "8080", "--workers", "4"]
+CMD ["uvicorn", "account.main:app", "--port", "8080", "--workers", "4", "--lifespan", "on"]
