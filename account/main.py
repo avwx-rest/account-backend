@@ -22,3 +22,8 @@ app.include_router(PlanRouter)
 app.include_router(RegisterRouter)
 app.include_router(TokenRouter)
 app.include_router(UserRouter)
+
+
+@app.get("/")
+def root():
+    return "Hello"
