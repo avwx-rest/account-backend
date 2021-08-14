@@ -9,6 +9,7 @@ from rollbar.contrib.fastapi import ReporterMiddleware
 from fastapi import FastAPI
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
+from mailchimp3 import MailChimp
 
 from account.config import CONFIG
 from account.models.addon import Addon
@@ -54,4 +55,6 @@ async def app_init():
     if CONFIG.log_key:
         rollbar.init(CONFIG.log_key, environment="production", handler="async")
         app.add_middleware(ReporterMiddleware)
+    # Init mailing list
+    app.chimp = MailChimp(mc_api=CONFIG.mc_key, mc_user=CONFIG.mc_username)
     print("Startup complete")
