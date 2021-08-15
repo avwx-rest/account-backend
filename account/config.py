@@ -12,7 +12,7 @@ class Settings(BaseModel):
     """Server config settings"""
 
     # Mongo Engine settings
-    mongo_uri = config("MONGO_URI")
+    mongo_uri = config("MONGO_URI", default="mongodb://localhost:27017")
 
     # Security settings
     authjwt_secret_key = config("SECRET_KEY")

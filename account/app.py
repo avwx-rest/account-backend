@@ -56,5 +56,6 @@ async def app_init():
         rollbar.init(CONFIG.log_key, environment="production", handler="async")
         app.add_middleware(ReporterMiddleware)
     # Init mailing list
-    app.chimp = MailChimp(mc_api=CONFIG.mc_key, mc_user=CONFIG.mc_username)
+    if CONFIG.mc_key and CONFIG.mc_username:
+        app.chimp = MailChimp(mc_api=CONFIG.mc_key, mc_user=CONFIG.mc_username)
     print("Startup complete")
