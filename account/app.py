@@ -7,6 +7,8 @@ Server app config
 import rollbar
 from rollbar.contrib.fastapi import ReporterMiddleware
 from fastapi import FastAPI
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 from mailchimp3 import MailChimp
@@ -42,6 +44,15 @@ app = FastAPI(
         "name": "MIT",
         "url": "https://github.com/avwx-rest/account-backend/blob/main/LICENSE",
     },
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
