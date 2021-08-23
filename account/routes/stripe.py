@@ -2,6 +2,7 @@
 Stripe callback router
 """
 
+import rollbar
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Response
 from stripe.error import SignatureVerificationError
 
@@ -38,12 +39,13 @@ async def stripe_cancel(user: User = Depends(current_user)):
 @router.post("/fulfill")
 async def stripe_fulfill(stripe_signature: str = Header(None), data: dict = Body(...)):
     """Stripe event handler"""
-    print(data)
+    # print(data)
     try:
         event = get_event(data, stripe_signature)
     except (ValueError, SignatureVerificationError) as exc:
         raise HTTPException(400) from exc
-    print(event)
+    # print(event)
+    rollbar.report_message("checkout instance", extra_data=data)
     if event["type"] == "checkout.session.completed":
         if new_subscription(event["data"]["object"]):
             return Response()

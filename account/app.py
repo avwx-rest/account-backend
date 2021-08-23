@@ -60,7 +60,8 @@ app.add_middleware(
 async def app_init():
     """Initialize application services"""
     # Init Database
-    app.db = AsyncIOMotorClient(CONFIG.mongo_uri).account
+    client = AsyncIOMotorClient(CONFIG.mongo_uri)
+    app.db = client[CONFIG.database]
     await init_beanie(app.db, document_models=[Addon, Plan, TokenUsage, User])
     # Init error logging
     if CONFIG.log_key:

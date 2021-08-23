@@ -18,6 +18,7 @@ from account.config import CONFIG
 # Override config settings before loading the app
 CONFIG.testing = True
 CONFIG.mongo_uri = config("TEST_MONGO_URI", default="mongodb://localhost:27017")
+CONFIG.database = "account-tests"
 
 from account.main import app
 
