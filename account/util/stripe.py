@@ -2,12 +2,36 @@
 Stripe subscription utilities
 """
 
-from bson.objectid import ObjectId
+import stripe
 from stripe import Event, Subscription, Webhook
+from bson.objectid import ObjectId
 
 from account.config import CONFIG
 from account.models.plan import Plan
 from account.models.user import Stripe, User
+
+
+stripe.api_key = CONFIG.stripe_secret_key
+
+_SESSION = {
+    "payment_method_types": ["card"],
+    "success_url": CONFIG.root_url + "/stripe/success",
+    "cancel_url": CONFIG.root_url + "/stripe/cancel",
+}
+
+
+def get_session(user: User, plan: Plan) -> stripe.checkout.Session:
+    """Creates a Stripe Session object to start a Checkout"""
+    params = {
+        "client_reference_id": user.id,
+        "subscription_data": {"items": [{"plan": plan.stripe_id}]},
+        **_SESSION,
+    }
+    if user.stripe:
+        params["customer"] = user.stripe.customer_id
+    else:
+        params["customer_email"] = user.email
+    return stripe.checkout.Session.create(**params)
 
 
 def get_event(payload: dict, sig: str) -> Event:

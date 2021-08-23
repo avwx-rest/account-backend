@@ -163,3 +163,8 @@ class User(Document, UserOut):
             if notification.id == value:
                 return i, notification
         return -1, None
+
+    async def add_notification(self, type: str, text: str):
+        """Add a new notification to the user's list"""
+        self.notifications.append(Notification(type, text))
+        await self.save()
