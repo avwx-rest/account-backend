@@ -19,7 +19,7 @@ async def get_user_plan(user: User = Depends(current_user)):
 
 
 @router.post("/plan")
-async def change_plan(key: Body(..., embed=True), user: User = Depends(current_user)):
+async def change_plan(key: str = Body(..., embed=True), user: User = Depends(current_user)):
     """Change the user's current plan. Returns Stripe session if Checkout is required"""
     plan = await Plan.by_key(key)
     if plan is None:
