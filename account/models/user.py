@@ -4,6 +4,7 @@ User models
 
 # pylint: disable=too-few-public-methods,redefined-builtin,invalid-name
 
+from contextlib import suppress
 from datetime import datetime, timezone
 from secrets import token_urlsafe
 from typing import Optional
@@ -12,7 +13,7 @@ from beanie import Document, Indexed
 from bson.objectid import ObjectId
 from pydantic import BaseModel, EmailStr, Field
 
-from account.models.addon import Addon
+from account.models.addon import AddonOut, UserAddon
 from account.models.helpers import ObjectIdStr
 from account.models.plan import Plan, PlanOut
 from account.models.token import Token
@@ -97,7 +98,7 @@ class UserOut(UserUpdate):
     stripe: Optional[Stripe] = None
     plan: Optional[PlanOut] = None
     tokens: list[UserToken] = Field(default=[])
-    addons: list[Addon] = Field(default=[])
+    addons: list[AddonOut] = Field(default=[])
     notifications: list[Notification] = Field(default=[])
 
     allow_overage: bool = False
@@ -111,6 +112,7 @@ class User(Document, UserOut):
     password: str
     email_confirmed_at: Optional[datetime] = None
     plan: Optional[Plan] = None
+    addons: list[UserAddon] = Field(default=[])
 
     class Collection:
         """DB collection name"""
@@ -135,6 +137,13 @@ class User(Document, UserOut):
     def created(self) -> datetime:
         """Datetime user was created from ID"""
         return self.id.generation_time
+
+    @property
+    def has_subscription(self) -> bool:
+        """Returns True if the user has a Stripe subscript ID"""
+        with suppress(AttributeError):
+            return isinstance(self.stripe.subscription_id, str)
+        return False
 
     @classmethod
     async def by_email(cls, email: str) -> "User":
@@ -168,3 +177,10 @@ class User(Document, UserOut):
         """Add a new notification to the user's list"""
         self.notifications.append(Notification(type, text))
         await self.save()
+
+    def has_addon(self, key: str) -> bool:
+        """Returns True if the user has an addon with a matching key"""
+        for addon in self.addons:
+            if addon.key == key:
+                return True
+        return False

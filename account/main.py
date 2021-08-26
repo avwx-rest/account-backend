@@ -6,6 +6,7 @@ Server main runtime
 
 from account import jwt
 from account.app import app
+from account.routes.addon import router as AddonRouter
 from account.routes.auth import router as AuthRouter
 from account.routes.mail import router as MailRouter
 from account.routes.notification import router as NotificationRouter
@@ -16,6 +17,7 @@ from account.routes.token import router as TokenRouter
 from account.routes.user import router as UserRouter
 
 
+app.include_router(AddonRouter)
 app.include_router(AuthRouter)
 app.include_router(MailRouter)
 app.include_router(NotificationRouter)

@@ -6,7 +6,7 @@ import rollbar
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Response
 from stripe.error import SignatureVerificationError
 
-from account.models.user import Notification, User, UserOut
+from account.models.user import User, UserOut
 from account.util.current_user import current_user
 from account.util.stripe import get_event, new_subscription
 

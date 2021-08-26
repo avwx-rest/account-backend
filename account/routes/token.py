@@ -50,7 +50,7 @@ async def update_token(
     return token
 
 
-@router.delete("/{value}", response_model=Token)
+@router.delete("/{value}")
 async def delete_token(value: str, user: User = Depends(current_user)):
     """Deletes a token by string value"""
     i, token = user.get_token(value)

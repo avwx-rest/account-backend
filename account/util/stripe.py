@@ -20,11 +20,11 @@ _SESSION = {
 }
 
 
-def get_session(user: User, plan: Plan) -> stripe.checkout.Session:
+def get_session(user: User, price_id: str) -> stripe.checkout.Session:
     """Creates a Stripe Session object to start a Checkout"""
     params = {
         "client_reference_id": user.id,
-        "subscription_data": {"items": [{"plan": plan.stripe_id}]},
+        "subscription_data": {"items": [{"plan": price_id}]},
         **_SESSION,
     }
     if user.stripe:
@@ -85,3 +85,24 @@ async def cancel_subscription(user: User) -> bool:
     user.remove_token_by(type="dev")
     await user.save()
     return True
+
+
+def add_to_subscription(user: User, price_id: str) -> bool:
+    """Add an addon to an existing subscription"""
+    if not user.has_subscription:
+        return False
+    stripe.SubscriptionItem.create(
+        subscription=user.stripe.subscription_id, price=price_id
+    )
+    return True
+
+
+def remove_from_subscription(user: User, price_id: str) -> bool:
+    """Remove an addon from a subscription"""
+    if not user.has_subscription:
+        return False
+    sub = Subscription.retrieve(user.stripe.subscription_id)
+    for item in sub["items"]["data"]:
+        if item["price"]["id"] == price_id:
+            return stripe.SubscriptionItem.delete(item["id"])["deleted"] is True
+    return False
