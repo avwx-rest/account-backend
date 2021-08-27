@@ -4,6 +4,7 @@ Test data handlers
 
 import asyncio as aio
 import json
+import random
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
@@ -31,6 +32,28 @@ def make_user(email: str, offset: Optional[int] = 0) -> User:
     return user
 
 
+async def add_token_usage(user: User, token: UserToken, days: int = 30):
+    """Add historic token usage for a user"""
+    value = random.randint(0, 3000)
+    today = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    tasks = []
+    for i in range(-days, 1):
+        if not value:
+            continue
+        date = today + timedelta(days=i)
+        usage = TokenUsage(
+            token_id=token.id,
+            user_id=user.id,
+            count=value,
+            date=date,
+            updated=date,
+        )
+        tasks.append(usage.create())
+        value += random.randint(-100, 100)
+        value = max(value, 0)
+    await aio.gather(*tasks)
+
+
 async def add_empty_user() -> str:
     """Adds minimal user to user collection"""
     user = make_user("empty@test.io")
@@ -45,19 +68,7 @@ async def add_token_user(history: bool = False) -> str:
     user.tokens = [token]
     await user.create()
     if history:
-        now = datetime.now(tz=timezone.utc)
-        tasks = []
-        for i in range(3):
-            day = now - timedelta(days=i)
-            usage = TokenUsage(
-                token_id=token.id,
-                user_id=user.id,
-                count=i + 100,
-                date=day,
-                updated=day,
-            )
-            tasks.append(usage.create())
-        await aio.gather(*tasks)
+        await add_token_usage(user, token, days=3)
     return user.email
 
 

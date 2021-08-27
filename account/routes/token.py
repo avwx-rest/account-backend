@@ -2,6 +2,8 @@
 Token management router
 """
 
+from datetime import datetime, timedelta, timezone
+
 from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Response
 
@@ -73,7 +75,14 @@ async def refresh_token(value: str, user: User = Depends(current_user)):
 
 
 @router.get("/{value}/history", response_model=list[TokenUsageOut])
-async def get_token_history(value: str, user: User = Depends(current_user)):
+async def get_token_history(
+    value: str, days: int = 30, user: User = Depends(current_user)
+):
     """Return a token's usage history"""
     _, token = user.get_token(value)
-    return await TokenUsage.find(TokenUsage.token_id == ObjectId(token.id)).to_list()
+    if token is None:
+        raise HTTPException(404, f"Token with value {value} does not exist")
+    days_since = datetime.now(tz=timezone.utc) - timedelta(days=days)
+    return await TokenUsage.find(
+        TokenUsage.token_id == ObjectId(token.id), TokenUsage.date >= days_since
+    ).to_list()
