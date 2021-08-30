@@ -45,7 +45,7 @@ class Addon(Document, AddonOut):
         """Return a user-specific version of the addon"""
         try:
             price = self.price_ids[price_key]
-        except (AttributeError, KeyError):
+        except (AttributeError, KeyError, TypeError):
             price = self.price_id
         return UserAddon(
             key=self.key,

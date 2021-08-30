@@ -30,11 +30,12 @@ async def new_addon(key: str, user: User = Depends(current_user)):
         raise HTTPException(404, f"Addon with key {key} does not exist")
     if user.has_addon(addon.key):
         raise HTTPException(400, f"User already has the {addon.key} addon")
+    user_addon = addon.to_user(user.plan.key)
     if not user.has_subscription:
-        return get_session(user, addon.stripe_id)
-    if not add_to_subscription(user, addon.stripe_id):
+        return get_session(user, user_addon.price_id)
+    if not add_to_subscription(user, user_addon.price_id):
         raise HTTPException(500, "Unable to add addon to user subscription")
-    user.addons.append(addon.to_user(user.plan.key))
+    user.addons.append(user_addon)
     await user.save()
 
 
