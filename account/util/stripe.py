@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 
 from account.config import CONFIG
 from account.models.plan import Plan
-from account.models.user import Stripe, User
+from account.models.user import Stripe, User, UserToken
 
 
 stripe.api_key = CONFIG.stripe_secret_key
@@ -41,7 +41,7 @@ def get_event(payload: dict, sig: str) -> Event:
 
 async def new_subscription(session: dict) -> bool:
     """Create a new subscription for a validated Checkout Session"""
-    user = User.find_one(User.id == ObjectId(session["client_reference_id"]))
+    user = await User.find_one(User.id == ObjectId(session["client_reference_id"]))
     if user is None:
         return False
     user.stripe = Stripe(
@@ -49,7 +49,8 @@ async def new_subscription(session: dict) -> bool:
     )
     plan_id = session["display_items"][0]["plan"]["id"]
     user.plan = await Plan.by_stripe_id(plan_id)
-    user.new_token(dev=True)
+    token = await UserToken.new(type="dev")
+    user.tokens.append(token)
     await user.save()
     return True
 
