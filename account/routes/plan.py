@@ -32,12 +32,12 @@ async def change_plan(
     if plan.stripe_id:
         if not user.has_subscription:
             return get_session(user, plan)
-        if not change_subscription(user, plan):
+        if not await change_subscription(user, plan):
             await user.add_notification("error", "Unable to update your subscription")
             return
         msg += ". Thank you for supporting AVWX!"
     else:
-        cancel_subscription(user)
+        await cancel_subscription(user)
     await user.add_notification("success", msg)
 
 

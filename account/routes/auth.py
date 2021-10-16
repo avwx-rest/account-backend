@@ -5,7 +5,12 @@ Authentication router
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi_jwt_auth import AuthJWT
 
-from account.models.auth import AccessToken, RefreshToken
+from account.models.auth import (
+    AccessToken,
+    RefreshToken,
+    ACCESS_EXPIRES,
+    REFRESH_EXPIRES,
+)
 from account.models.user import User, UserAuth
 from account.util.password import hash_password
 
@@ -19,8 +24,12 @@ async def login(user_auth: UserAuth, auth: AuthJWT = Depends()):
     user = await User.by_email(user_auth.email)
     if user is None or hash_password(user_auth.password) != user.password:
         raise HTTPException(status_code=401, detail="Bad email or password")
-    access_token = auth.create_access_token(subject=user.email)
-    refresh_token = auth.create_refresh_token(subject=user.email)
+    access_token = auth.create_access_token(
+        subject=user.email, expires_time=ACCESS_EXPIRES
+    )
+    refresh_token = auth.create_refresh_token(
+        subject=user.email, expires_time=REFRESH_EXPIRES
+    )
     return RefreshToken(access_token=access_token, refresh_token=refresh_token)
 
 

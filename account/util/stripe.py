@@ -83,7 +83,7 @@ async def cancel_subscription(user: User) -> bool:
         sub.delete()
         user.stripe.subscription_id = None
     user.plan = await Plan.by_key("free")
-    user.remove_token_by(type="dev")
+    user.notifications = [n for n in user.notifications if n.type != "dev"]
     await user.save()
     return True
 

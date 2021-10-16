@@ -23,7 +23,7 @@ class Stripe(BaseModel):
     """Stripe IDs"""
 
     customer_id: str
-    subscription_id: str
+    subscription_id: Optional[str]
 
 
 class Notification(BaseModel):
@@ -175,7 +175,7 @@ class User(Document, UserOut):
 
     async def add_notification(self, type: str, text: str):
         """Add a new notification to the user's list"""
-        self.notifications.append(Notification(type, text))
+        self.notifications.append(Notification(type=type, text=text))
         await self.save()
 
     def has_addon(self, key: str) -> bool:
