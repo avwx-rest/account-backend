@@ -28,7 +28,6 @@ class Addon(Document, AddonOut):
     """Plan add-on entitlement"""
 
     product_id: str
-    price_id: Optional[str]
     price_ids: Optional[dict[str, str]]
 
     class Collection:
@@ -38,15 +37,21 @@ class Addon(Document, AddonOut):
 
     @classmethod
     async def by_key(cls, key: str) -> "Addon":
-        """Get an add-on by Stripe product ID"""
+        """Get an add-on by internal key"""
         return await cls.find_one(cls.key == key)
 
-    def to_user(self, price_key: str = None) -> UserAddon:
+    @classmethod
+    async def by_product_id(cls, key: str) -> "Addon":
+        """Get an add-on by Stripe product ID"""
+        return await cls.find_one(cls.product_id == key)
+
+    def to_user(self, plan: str) -> UserAddon:
         """Return a user-specific version of the addon"""
         try:
-            price = self.price_ids[price_key]
+            price = self.price_ids[plan]
         except (AttributeError, KeyError, TypeError):
-            price = self.price_id
+            key = "yearly" if plan.endswith("-year") else "monthly"
+            price = self.price_ids[key]
         return UserAddon(
             key=self.key,
             name=self.name,

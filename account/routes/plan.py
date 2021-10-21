@@ -20,7 +20,9 @@ async def get_user_plan(user: User = Depends(current_user)):
 
 @router.post("")
 async def change_plan(
-    key: str = Body(..., embed=True), user: User = Depends(current_user)
+    key: str = Body(..., embed=True),
+    remove_addons: bool = Body(True, embed=True),
+    user: User = Depends(current_user),
 ):
     """Change the user's current plan. Returns Stripe session if Checkout is required"""
     plan = await Plan.by_key(key)
@@ -37,7 +39,7 @@ async def change_plan(
             return
         msg += ". Thank you for supporting AVWX!"
     else:
-        await cancel_subscription(user)
+        await cancel_subscription(user, keep_addons=not remove_addons)
     await user.add_notification("success", msg)
 
 

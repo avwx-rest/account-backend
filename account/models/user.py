@@ -184,3 +184,8 @@ class User(Document, UserOut):
             if addon.key == key:
                 return True
         return False
+
+    def replace_addon(self, addon: UserAddon) -> None:
+        """Replaces and Addon with the same key value"""
+        self.addons = [a for a in self.addons if a.key != addon.key]
+        self.addons.append(addon)
