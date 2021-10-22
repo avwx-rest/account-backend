@@ -36,10 +36,11 @@ async def change_plan(
             return get_session(user, plan)
         if not await change_subscription(user, plan):
             await user.add_notification("error", "Unable to update your subscription")
-            return
+            raise HTTPException(500, "Unable to update your subscription")
         msg += ". Thank you for supporting AVWX!"
-    else:
-        await cancel_subscription(user, keep_addons=not remove_addons)
+    elif not await cancel_subscription(user, keep_addons=not remove_addons):
+        await user.add_notification("error", "Unable to cancel your subscription")
+        raise HTTPException(500, "Unable to cancel your subscription")
     await user.add_notification("success", msg)
 
 

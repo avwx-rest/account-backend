@@ -65,6 +65,7 @@ async def change_subscription(user: User, plan: Plan) -> bool:
         return False
     items: list[dict] = []
     sub = Subscription.retrieve(sub_id)
+    # Update existing subscription items
     for item in sub["items"]["data"]:
         if addon := await Addon.by_product_id(item["price"]["product"]):
             user_addon = addon.to_user(plan.key)
@@ -72,13 +73,16 @@ async def change_subscription(user: User, plan: Plan) -> bool:
                 user.replace_addon(user_addon)
                 items.append({"id": item["id"], "price": user_addon.price_id})
         else:
-            # This is a mutually exclusive plan
+            # This updates an existing paid plan
             items.append({"id": item["id"], "plan": plan.stripe_id})
     sub.modify(
         sub_id,
         cancel_at_period_end=False,
         items=items,
     )
+    # This adds a paid plan if coming from a free one after modifying any addons
+    if not user.plan.stripe_id:
+        add_to_subscription(user, plan.stripe_id)
     user.stripe.subscription_id = sub.id
     user.plan = plan
     await user.save()
@@ -90,12 +94,9 @@ async def cancel_subscription(user: User, keep_addons: bool = False) -> bool:
     if user.stripe is None:
         return False
     if user.stripe.subscription_id:
-        if keep_addons:
-            if not remove_from_subscription(user, product_id=user.plan.stripe_id):
-                return False
-        else:
-            sub = Subscription.retrieve(user.stripe.subscription_id)
-            sub.delete()
+        if keep_addons and not remove_from_subscription(user, user.plan.stripe_id):
+            return False
+        elif Subscription.delete(user.stripe.subscription_id)["ended_at"]:
             user.stripe.subscription_id = None
             user.addons = []
     user.plan = await Plan.by_key("free")
@@ -114,14 +115,24 @@ def add_to_subscription(user: User, price_id: str) -> bool:
     return True
 
 
-def remove_from_subscription(
-    user: User, price_id: str = None, product_id: str = None
-) -> bool:
+def remove_from_subscription(user: User, price_id: str = None) -> bool:
     """Remove an addon from a subscription"""
     if not user.has_subscription:
         return False
     sub = Subscription.retrieve(user.stripe.subscription_id)
     for item in sub["items"]["data"]:
-        if item["price"]["id"] == price_id or item["price"]["product"] == product_id:
-            return stripe.SubscriptionItem.delete(item["id"])["deleted"] is True
+        if item["price"]["id"] == price_id:
+            # If nothing left in subscription
+            if len(sub["items"]["data"]) == 1:
+                if stripe.Subscription.delete(user.stripe.subscription_id)["ended_at"]:
+                    user.stripe = None
+                    return True
+            else:
+                options = {}
+                if item["plan"]["usage_type"] == "metered":
+                    options["clear_usage"] = True
+                return (
+                    stripe.SubscriptionItem.delete(item["id"], **options)["deleted"]
+                    is True
+                )
     return False
