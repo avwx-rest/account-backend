@@ -2,9 +2,11 @@
 Stripe callback router
 """
 
+import stripe
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from stripe.error import SignatureVerificationError
 
+from account.config import CONFIG
 from account.models.user import User, UserOut
 from account.util.current_user import current_user
 from account.util.stripe import get_event, new_subscription
@@ -58,3 +60,15 @@ async def stripe_fulfill(request: Request, stripe_signature: str = Header(None))
     else:
         print(f"Unhandled event type {event_type}")
     raise HTTPException(400)
+
+
+@router.get("/portal")
+async def customer_portal(user: User = Depends(current_user)):
+    """Returns the user's Stripe account portal URL"""
+    if not user.stripe and user.stripe.customer_id:
+        return None
+    session = stripe.billing_portal.Session.create(
+        customer=user.stripe.customer_id,
+        return_url=CONFIG.root_url + "/plans",
+    )
+    return {"url": session.url}
