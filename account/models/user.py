@@ -38,8 +38,6 @@ class Notification(BaseModel):
 class UserToken(Token):
     """API token"""
 
-    id: ObjectIdStr = Field(default_factory=ObjectId, alias="_id")
-
     async def is_unique(self) -> bool:
         """Checks if the current token.value is unique"""
         resp = await User.find_one(User.tokens.value == self.value, {"_id": 1})
@@ -160,9 +158,9 @@ class User(Document, UserOut):
         self.plan = await Plan.by_key("free")
 
     def get_token(self, value: str) -> tuple[int, Optional[UserToken]]:
-        """Returns a token and index by its string value"""
+        """Returns a token and index by its id"""
         for i, token in enumerate(self.tokens):
-            if token.value == value:
+            if str(token.id) == value:
                 return i, token
         return -1, None
 

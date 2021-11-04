@@ -7,7 +7,13 @@ from datetime import datetime, timedelta, timezone
 from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Response
 
-from account.models.token import Token, TokenUpdate, TokenUsage, TokenUsageOut
+from account.models.token import (
+    AllTokenUsageOut,
+    Token,
+    TokenUpdate,
+    TokenUsage,
+    TokenUsageOut,
+)
 from account.models.user import User, UserToken
 from account.util.current_user import current_user
 
@@ -27,6 +33,34 @@ async def new_token(user: User = Depends(current_user)):
     user.tokens.append(token)
     await user.save()
     return token
+
+
+@router.get("/history", response_model=list[AllTokenUsageOut])
+async def get_all_history(days: int = 30, user: User = Depends(current_user)):
+    """Returns all recent token history"""
+    days_since = datetime.now(tz=timezone.utc) - timedelta(days=days)
+    data = (
+        await TokenUsage.find(
+            TokenUsage.user_id == ObjectId(user.id),
+            TokenUsage.date >= days_since,
+        )
+        .aggregate(
+            [
+                {"$project": {"_id": 0, "date": 1, "count": 1, "token_id": 1}},
+                {
+                    "$group": {
+                        "_id": "$token_id",
+                        "days": {"$push": {"date": "$date", "count": "$count"}},
+                    }
+                },
+            ]
+        )
+        .to_list()
+    )
+    for i, item in enumerate(data):
+        data[i]["token_id"] = item["_id"]
+        del data[i]["_id"]
+    return data
 
 
 @router.get("/{value}", response_model=Token)

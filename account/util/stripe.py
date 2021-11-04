@@ -96,7 +96,7 @@ async def cancel_subscription(user: User, keep_addons: bool = False) -> bool:
     if user.stripe.subscription_id:
         if keep_addons and not remove_from_subscription(user, user.plan.stripe_id):
             return False
-        elif Subscription.delete(user.stripe.subscription_id)["ended_at"]:
+        if Subscription.delete(user.stripe.subscription_id)["ended_at"]:
             user.stripe.subscription_id = None
             user.addons = []
     user.plan = await Plan.by_key("free")
