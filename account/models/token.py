@@ -41,6 +41,7 @@ class TokenUsageOut(BaseModel):
 class TokenUsage(Document, TokenUsageOut):
     """Token usage DB representation"""
 
+    token_id: PydanticObjectId
     user_id: PydanticObjectId
     date: datetime
     updated: datetime
