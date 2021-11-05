@@ -77,7 +77,7 @@ async def test_get_token(client: AsyncClient) -> None:
     auth = await auth_headers(client, email)
     token = await get_token(client, auth)
     # Request token by value
-    resp = await client.get("/token/" + token["value"], headers=auth)
+    resp = await client.get("/token/" + token["_id"], headers=auth)
     assert resp.status_code == 200
     new_token = resp.json()
     assert_app_token(new_token)
@@ -89,7 +89,7 @@ async def test_update_token(client: AsyncClient) -> None:
     """Test updating fields of a user token"""
     email = await add_token_user()
     auth = await auth_headers(client, email)
-    value = (await get_token(client, auth))["value"]
+    value = (await get_token(client, auth))["_id"]
     # Update token name
     name = "New Name"
     resp = await client.patch("/token/" + value, headers=auth, json={"name": name})
@@ -105,7 +105,7 @@ async def test_delete_token(client: AsyncClient) -> None:
     """Test deleting a new user token"""
     email = await add_token_user()
     auth = await auth_headers(client, email)
-    value = (await get_token(client, auth))["value"]
+    value = (await get_token(client, auth))["_id"]
     # Delete token
     resp = await client.delete("/token/" + value, headers=auth)
     assert resp.status_code == 204
@@ -120,7 +120,7 @@ async def test_token_refresh(client: AsyncClient) -> None:
     """Test refreshing a user token's value"""
     email = await add_token_user()
     auth = await auth_headers(client, email)
-    value = (await get_token(client, auth))["value"]
+    value = (await get_token(client, auth))["_id"]
     # Refresh value
     resp = await client.post(f"/token/{value}/refresh", headers=auth)
     assert resp.status_code == 200
@@ -143,7 +143,7 @@ async def test_token_history(client: AsyncClient) -> None:
     """Test fetching a user's token usage history"""
     email = await add_token_user(history=True)
     auth = await auth_headers(client, email)
-    value = (await get_token(client, auth))["value"]
+    value = (await get_token(client, auth))["_id"]
     # Fetch single token history
     resp = await client.get(f"/token/{value}/history", headers=auth)
     assert resp.status_code == 200
