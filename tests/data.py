@@ -37,7 +37,7 @@ async def add_token_usage(user: User, token: UserToken, days: int = 30):
     value = random.randint(0, 3000)
     today = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     tasks = []
-    for i in range(-days, 1):
+    for i in range(-days + 1, 1):
         if not value:
             continue
         date = today + timedelta(days=i)
