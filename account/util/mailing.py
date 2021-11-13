@@ -34,6 +34,7 @@ async def add_to_mailing(user: User) -> None:
     """Add an email to the mailing list"""
     if not CONFIG.testing:
         await kew.add((user, True))
+    user.subscribed = True
 
 
 def _add_to_mailing(email: str) -> bool:
@@ -58,6 +59,7 @@ async def remove_from_mailing(user: User) -> None:
     """Delete an email from the mailing list"""
     if not CONFIG.testing:
         await kew.add((user, False))
+    user.subscribed = False
 
 
 def _remove_from_mailing(email: str) -> bool:

@@ -53,6 +53,7 @@ async def add_to_mailing_list(user: User = Depends(current_user)):
     if user.subscribed:
         raise HTTPException(400, "User is already subscribed")
     await add_to_mailing(user)
+    await user.save()
     return Response(status_code=200)
 
 
@@ -62,4 +63,5 @@ async def remove_from_mailing_list(user: User = Depends(current_user)):
     if not user.subscribed:
         raise HTTPException(400, "User is already unsubscribed")
     await remove_from_mailing(user)
+    await user.save()
     return Response(status_code=204)
