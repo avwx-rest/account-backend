@@ -41,6 +41,9 @@ class Settings(BaseModel):
     # Logging
     log_key = config("LOG_KEY", default="")
 
+    # reCaptcha
+    recaptcha_secret_key = config("RECAPTCHA_SECRET_KEY", default="")
+
     testing = config("TESTING", default=False, cast=bool)
 
 

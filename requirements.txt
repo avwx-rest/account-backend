@@ -3,6 +3,7 @@ beanie~=1.2
 fastapi~=0.66
 fastapi-jwt-auth~=0.5
 fastapi-mail~=0.4
+httpx~=0.18
 kewkew~=0.1
 mailchimp3~=3.0
 python-decouple~=3.4

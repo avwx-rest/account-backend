@@ -77,6 +77,12 @@ class UserAuth(BaseModel):
     password: str
 
 
+class UserRegister(UserAuth):
+    """Registration include reCaptcha token"""
+
+    token: str
+
+
 class UserUpdate(BaseModel):
     """Updatable user fields"""
 

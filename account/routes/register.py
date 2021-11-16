@@ -6,9 +6,10 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Response
 from fastapi_jwt_auth import AuthJWT
 from pydantic import EmailStr
 
-from account.models.user import User, UserAuth, UserOut
+from account.models.user import User, UserRegister, UserOut
 from account.util.mail import send_password_reset_email
 from account.util.password import hash_password
+from account.util.recaptcha import verify
 
 router = APIRouter(prefix="/register", tags=["Register"])
 
@@ -16,11 +17,13 @@ embed = Body(..., embed=True)
 
 
 @router.post("", response_model=UserOut)
-async def user_registration(user_auth: UserAuth):
+async def user_registration(user_auth: UserRegister):
     """Creates a new user"""
     user = await User.by_email(user_auth.email)
     if user is not None:
         raise HTTPException(409, "User with that email already exists")
+    if not await verify(user_auth.token):
+        raise HTTPException(407, "It doesn't look like you're a human")
     hashed = hash_password(user_auth.password)
     user = User(email=user_auth.email, password=hashed)
     await user.add_default_documents()
