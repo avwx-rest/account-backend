@@ -36,21 +36,25 @@ async def new_addon(key: str, user: User = Depends(current_user)):
     if not add_to_subscription(user, user_addon.price_id):
         raise HTTPException(500, "Unable to add addon to user subscription")
     user.addons.append(user_addon)
+    if addon.key == "overage":
+        user.allow_overage = True
     await user.save()
 
 
 @router.delete("/{key}")
 async def delete_addon(key: str, user: User = Depends(current_user)):
     """Remove an addon from a user's subscription"""
-    for addon in user.addons:
-        if addon.key == key:
-            price_id = addon.price_id
+    for item in user.addons:
+        if item.key == key:
+            addon = item
             break
     else:
-        raise HTTPException(400, f"User does not have the {addon.key} addon")
-    if not remove_from_subscription(user, price_id):
+        raise HTTPException(400, f"User does not have the {key} addon")
+    if not remove_from_subscription(user, addon.price_id):
         raise HTTPException(500, "Unable to remove addon from user subscription")
     user.addons = [i for i in user.addons if i.key != key]
+    if addon.key == "overage":
+        user.allow_overage = False
     await user.save()
     return Response(status_code=204)
 

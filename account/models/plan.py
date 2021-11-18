@@ -20,7 +20,6 @@ class PlanOut(BaseModel):
     price: int
     level: int
     limit: int
-    overage: bool = False
 
     def __repr__(self) -> str:
         return f"<Plan {self.key}>"
@@ -74,16 +73,3 @@ class Plan(Document, PlanOut):
     async def by_stripe_id(cls, id: str) -> "Plan":
         """Get a plan by Stripe product ID"""
         return await cls.find_one(cls.stripe_id == id)
-
-    # def as_embedded(self) -> PlanOut:
-    #     """"""
-    #     return Plan(
-    #         key=self.key,
-    #         name=self.name,
-    #         type=self.type,
-    #         description=self.description,
-    #         price=self.price,
-    #         level=self.level,
-    #         limit=self.limit,
-    #         overage=self.overage,
-    #     )

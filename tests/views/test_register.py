@@ -22,7 +22,7 @@ async def test_new_user(client: AsyncClient) -> None:
     await add_plans("free")
     await assert_user_count(client, 0)
     email, password = "new@test.io", "testing1"
-    auth = {"email": email, "password": password}
+    auth = {"email": email, "password": password, "token": "test"}
     resp = await client.post("/register", json=auth)
     assert resp.status_code == 200
     user = resp.json()
@@ -42,7 +42,7 @@ async def test_existing_user(client: AsyncClient) -> None:
     """Test registering an existing user errors"""
     email = await add_empty_user()
     await assert_user_count(client, 1)
-    auth = {"email": email, "password": "testing1"}
+    auth = {"email": email, "password": "testing1", "token": "test"}
     resp = await client.post("/register", json=auth)
     assert resp.status_code == 409
     await assert_user_count(client, 1)

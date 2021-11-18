@@ -6,7 +6,6 @@
         "description": "AVWX Hobby",
         "price": 0,
         "level": 0,
-        "limit": 4000,
-        "overage": false
+        "limit": 4000
     }
 }
