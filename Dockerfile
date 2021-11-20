@@ -1,5 +1,5 @@
 # Start from the official Python 3.9 container
-FROM python:3.9.6
+FROM python:3.9.9
 
 # Expose the default application port
 EXPOSE 8080
