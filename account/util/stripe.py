@@ -49,7 +49,10 @@ async def new_subscription(session: dict) -> bool:
         customer_id=session["customer"], subscription_id=session["subscription"]
     )
     plan_id = session["display_items"][0]["plan"]["id"]
-    user.plan = await Plan.by_stripe_id(plan_id)
+    if plan := await Plan.by_stripe_id(plan_id):
+        user.plan = plan
+    else:
+        return False
     token = await UserToken.new(type="dev")
     user.tokens.append(token)
     await user.save()
