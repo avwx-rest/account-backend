@@ -23,6 +23,8 @@ async def request_verification_email(
 ):
     """Send the user a verification email"""
     user = await User.by_email(email)
+    if user is None:
+        raise HTTPException(404, "No user found with that email")
     if user.email_confirmed_at is not None:
         raise HTTPException(400, "Email is already verified")
     if user.disabled:
@@ -38,6 +40,8 @@ async def verify_email(token: str, auth: AuthJWT = Depends()):
     # Manually assign the token value
     auth._token = token  # pylint: disable=protected-access
     user = await User.by_email(auth.get_jwt_subject())
+    if user is None:
+        raise HTTPException(404, "No user found with that email")
     if user.email_confirmed_at is not None:
         raise HTTPException(400, "Email is already verified")
     if user.disabled:

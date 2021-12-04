@@ -35,6 +35,8 @@ async def user_registration(user_auth: UserRegister):
 async def forgot_password(email: EmailStr = embed, auth: AuthJWT = Depends()):
     """Sends password reset email"""
     user = await User.by_email(email)
+    if user is None:
+        raise HTTPException(404, "No user found with that email")
     if user.email_confirmed_at is None:
         raise HTTPException(400, "Email is not yet verified")
     if user.disabled:
@@ -50,6 +52,8 @@ async def reset_password(token: str, password: str = embed, auth: AuthJWT = Depe
     # Manually assign the token value
     auth._token = token  # pylint: disable=protected-access
     user = await User.by_email(auth.get_jwt_subject())
+    if user is None:
+        raise HTTPException(404, "No user found with that email")
     if user.email_confirmed_at is None:
         raise HTTPException(400, "Email is not yet verified")
     if user.disabled:
