@@ -48,13 +48,15 @@ async def new_subscription(session: dict) -> bool:
     user.stripe = Stripe(
         customer_id=session["customer"], subscription_id=session["subscription"]
     )
-    plan_id = session["display_items"][0]["plan"]["id"]
-    if plan := await Plan.by_stripe_id(plan_id):
+    item = session["display_items"][0]["plan"]
+    if plan := await Plan.by_stripe_id(item["id"]):
         user.plan = plan
+        token = await UserToken.new(type="dev")
+        user.tokens.append(token)
+    elif addon := await Addon.by_product_id(item["product"]):
+        user.addons.append(addon.to_user(user.plan.key))
     else:
         return False
-    token = await UserToken.new(type="dev")
-    user.tokens.append(token)
     await user.save()
     return True
 
