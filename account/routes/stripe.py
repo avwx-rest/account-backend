@@ -2,14 +2,18 @@
 Stripe callback router
 """
 
-import stripe
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from stripe.error import SignatureVerificationError
 
-from account.config import CONFIG
 from account.models.user import User, UserOut
 from account.util.current_user import current_user
-from account.util.stripe import get_event, new_subscription
+from account.util.stripe import (
+    get_event,
+    get_portal_session,
+    invoice_failed,
+    invoice_paid,
+    new_subscription,
+)
 
 
 router = APIRouter(prefix="/stripe", tags=["Stripe"])
@@ -33,6 +37,21 @@ async def stripe_cancel(user: User = Depends(current_user)):
     return user
 
 
+_EVENTS = {
+    # Payment is successful and the subscription is created.
+    # You should provision the subscription and save the customer ID to your database.
+    "checkout.session.completed": new_subscription,
+    # Continue to provision the subscription as payments continue to be made.
+    # Store the status in your database and check when a user accesses your service.
+    # This approach helps you avoid hitting rate limits.
+    "invoice.paid": invoice_paid,
+    # The payment failed or the customer does not have a valid payment method.
+    # The subscription becomes past_due. Notify your customer and send them to the
+    # customer portal to update their payment information.
+    "invoice.payment_failed": invoice_failed,
+}
+
+
 @router.post("/fulfill")
 async def stripe_fulfill(request: Request, stripe_signature: str = Header(None)):
     """Stripe event handler"""
@@ -42,21 +61,9 @@ async def stripe_fulfill(request: Request, stripe_signature: str = Header(None))
     except (ValueError, SignatureVerificationError) as exc:
         raise HTTPException(400) from exc
     event_type = event["type"]
-    if event_type == "checkout.session.completed":
-        # Payment is successful and the subscription is created.
-        # You should provision the subscription and save the customer ID to your database.
-        if await new_subscription(event["data"]["object"]):
+    if handler := _EVENTS.get(event_type):
+        if await handler(event["data"]["object"]):
             return Response()
-    elif event_type == "invoice.paid":
-        # Continue to provision the subscription as payments continue to be made.
-        # Store the status in your database and check when a user accesses your service.
-        # This approach helps you avoid hitting rate limits.
-        print(data)
-    elif event_type == "invoice.payment_failed":
-        # The payment failed or the customer does not have a valid payment method.
-        # The subscription becomes past_due. Notify your customer and send them to the
-        # customer portal to update their payment information.
-        print(data)
     else:
         print(f"Unhandled event type {event_type}")
     raise HTTPException(400)
@@ -67,8 +74,5 @@ async def customer_portal(user: User = Depends(current_user)):
     """Returns the user's Stripe account portal URL"""
     if not user.stripe and user.stripe.customer_id:
         return None
-    session = stripe.billing_portal.Session.create(
-        customer=user.stripe.customer_id,
-        return_url=CONFIG.root_url + "/plans",
-    )
+    session = get_portal_session(user)
     return {"url": session.url}

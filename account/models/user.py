@@ -7,7 +7,7 @@ User models
 from contextlib import suppress
 from datetime import datetime, timezone
 from secrets import token_urlsafe
-from typing import Optional
+from typing import Optional, TypeVar
 
 from beanie import Document, Indexed
 from bson.objectid import ObjectId
@@ -110,6 +110,9 @@ class UserOut(UserUpdate):
     disabled: bool = False
 
 
+U_ = TypeVar("U_", bound="User")
+
+
 class User(Document, UserOut):
     """User DB representation"""
 
@@ -150,14 +153,19 @@ class User(Document, UserOut):
         return False
 
     @classmethod
-    async def by_email(cls, email: str) -> "User":
+    async def by_email(cls, email: str) -> U_:
         """Get a user by email"""
         return await cls.find_one(cls.email == email)
 
     @classmethod
-    async def by_customer_id(cls, id: str) -> "User":
+    async def by_customer_id(cls, id: str) -> U_:
         """Get a user by Stripe customer ID"""
         return await cls.find_one(cls.stripe.customer_id == id)
+
+    @classmethod
+    async def from_stripe_session(cls, session: dict) -> U_:
+        """Get a user from a Stripe event session"""
+        return await User.get(ObjectId(session["client_reference_id"]))
 
     async def add_default_documents(self) -> None:
         """Adds initial embedded documents"""

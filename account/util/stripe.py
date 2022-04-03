@@ -4,12 +4,12 @@ Stripe subscription utilities
 
 import stripe
 from stripe import Event, Subscription, Webhook
-from bson.objectid import ObjectId
 
 from account.config import CONFIG
 from account.models.addon import Addon
 from account.models.plan import Plan
 from account.models.user import Stripe, User, UserToken
+from account.util import mail
 
 
 stripe.api_key = CONFIG.stripe_secret_key
@@ -40,9 +40,17 @@ def get_event(payload: dict, sig: str) -> Event:
     return Webhook.construct_event(payload, sig, CONFIG.stripe_sign_secret)
 
 
+def get_portal_session(user: User) -> stripe.billing_portal.Session:
+    """Creates a Stripe billing portal session"""
+    return stripe.billing_portal.Session.create(
+        customer=user.stripe.customer_id,
+        return_url=CONFIG.root_url + "/plans",
+    )
+
+
 async def new_subscription(session: dict) -> bool:
     """Create a new subscription for a validated Checkout Session"""
-    user = await User.find_one(User.id == ObjectId(session["client_reference_id"]))
+    user = await User.from_stripe_session(session)
     if user is None:
         return False
     user.stripe = Stripe(
@@ -141,3 +149,35 @@ def remove_from_subscription(user: User, price_id: str = None) -> bool:
                     is True
                 )
     return False
+
+
+async def invoice_paid(invoice: dict) -> bool:
+    """Re-enable a user account after invoice payment"""
+    user = await User.by_customer_id(invoice["customer"])
+    if user is None:
+        return False
+    if user.disabled:
+        user.disabled = False
+        await user.save()
+        await mail.send_enabled_email(user.email)
+    return True
+
+
+async def invoice_failed(invoice: dict) -> bool:
+    """Disable user account if two or more failed invoices"""
+    if invoice["paid"]:
+        return True
+    attempts = invoice["attempt_count"]
+    if attempts < 1:
+        return True
+    user = await User.by_customer_id(invoice["customer"])
+    if user is None:
+        return False
+    url = get_portal_session(user).url
+    if attempts == 1:
+        await mail.send_disable_email(user.email, url, warning=True)
+        return True
+    user.disabled = True
+    await user.save()
+    await mail.send_disable_email(user.email, url)
+    return True
