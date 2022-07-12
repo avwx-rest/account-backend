@@ -12,11 +12,8 @@ from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 from mailchimp3 import MailChimp
 
+from account import models
 from account.config import CONFIG
-from account.models.addon import Addon
-from account.models.plan import Plan
-from account.models.token import TokenUsage
-from account.models.user import User
 
 
 DESCRIPTION = """
@@ -61,7 +58,13 @@ async def app_init():
     # Init Database
     client = AsyncIOMotorClient(CONFIG.mongo_uri)
     app.db = client[CONFIG.database]
-    await init_beanie(app.db, document_models=[Addon, Plan, TokenUsage, User])
+    documents = [
+        models.addon.Addon,
+        models.plan.Plan,
+        models.token.TokenUsage,
+        models.user.User,
+    ]
+    await init_beanie(app.db, document_models=documents)
     # Init error logging
     if CONFIG.log_key:
         rollbar.init(CONFIG.log_key, environment="production", handler="async")

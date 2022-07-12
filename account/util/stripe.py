@@ -151,6 +151,14 @@ def remove_from_subscription(user: User, price_id: str = None) -> bool:
     return False
 
 
+def update_email(user: User, new_email: str) -> bool:
+    """Update the email associated with the Stripe user"""
+    if not user.has_subscription:
+        return False
+    stripe.Customer.modify(user.stripe.customer_id, email=new_email)
+    return True
+
+
 async def invoice_paid(invoice: dict) -> bool:
     """Re-enable a user account after invoice payment"""
     user = await User.by_customer_id(invoice["customer"])

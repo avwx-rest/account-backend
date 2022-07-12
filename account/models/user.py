@@ -120,6 +120,7 @@ class User(Document, UserOut):
     email_confirmed_at: Optional[datetime] = None
     plan: Optional[Plan] = None
     addons: list[UserAddon] = Field(default=[])
+    old_emails: Optional[list[EmailStr]] = None
 
     class Collection:
         """DB collection name"""
@@ -201,3 +202,10 @@ class User(Document, UserOut):
         """Replaces and Addon with the same key value"""
         self.addons = [a for a in self.addons if a.key != addon.key]
         self.addons.append(addon)
+
+    def update_email(self, new_email: str) -> None:
+        """Update email logging and replace"""
+        if self.old_emails is None:
+            self.old_emails = []
+        self.old_emails.append(self.email)
+        self.email = new_email

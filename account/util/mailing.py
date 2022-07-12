@@ -18,11 +18,14 @@ class MailingKew(Kew):
 
     async def worker(self, data: tuple[User, bool]) -> bool:
         """Queue worker to add/remove subscriber and update"""
-        user, add = data
-        handler = _add_to_mailing if add else _remove_from_mailing
-        if handler(user.email):
-            user.subscribed = add
-            await user.save()
+        match data:
+            case (user, True | False as add):
+                handler = _add_to_mailing if add else _remove_from_mailing
+                if handler(user.email):
+                    user.subscribed = add
+                    await user.save()
+            case (old, new) if isinstance(old, str) and isinstance(new, str):
+                _update_mailing(old, new)
         return True
 
 
@@ -71,3 +74,23 @@ def _remove_from_mailing(email: str) -> bool:
         if data.get("status") != 404:
             rollbar.report_message(data)
     return True
+
+
+async def update_mailing(old: str, new: str) -> None:
+    """Update an email on the mailing list"""
+    if not CONFIG.testing:
+        await kew.add((old, new))
+
+
+def _update_mailing(old: str, new: str) -> None:
+    try:
+        target = hashlib.md5(old.encode("utf-8")).hexdigest()
+        app.chimp.lists.members.update(
+            CONFIG.mc_list_id,
+            target,
+            {"email_address": new},
+        )
+    except MailChimpError as exc:
+        data = dict(exc.args[0])
+        if data.get("status") != 404:
+            rollbar.report_message(data)

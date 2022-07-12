@@ -27,7 +27,7 @@ It's built on top of these libraries to provide those features:
 
 ## Setup
 
-This codebase was written for Python 3.9 and above. Don't forget about a venv as well. The `python` commands below assume you're pointing to your desired Python3 target.
+This codebase was written for Python 3.10 and above. Don't forget about a venv as well. The `python` commands below assume you're pointing to your desired Python3 target.
 
 First we'll need to install our requirements.
 
@@ -72,7 +72,7 @@ python -m pip install -r tests/requirements.txt
 The tests need access to a [MongoDB]() store that is emptied at the end of each test. The easiest way to do this is to run a Mongo container in the background.
 
 ```bash
-docker run -d mongo
+docker run -d -p 27017:27017 mongo
 ```
 
 You can also connect to a remote server if you're running tests in a CI/CD pipeline. Just set the `TEST_MONGO_URI` in the environment. This value defaults to localhost and is only checked in the test suite. It should **never** use your `MONGO_URI`.

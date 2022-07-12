@@ -47,6 +47,33 @@ async def test_user_update(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_user_update_email(client: AsyncClient) -> None:
+    """Test updating user email"""
+    email = await add_empty_user()
+    new_email, key = "test_replace@test.io", "email"
+    auth = await auth_headers(client, email)
+    resp = await client.get("/user", headers=auth)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data[key] == email
+    # Update email
+    new_email = "test_replace@test.io"
+    resp = await client.patch("/user", headers=auth, json={key: new_email})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data[key] == new_email
+    # Check old email
+    resp = await client.get("/user", headers=auth)
+    assert resp.status_code == 404
+    # Check persistance
+    auth = await auth_headers(client, new_email, email)
+    resp = await client.get("/user", headers=auth)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data[key] == new_email
+
+
+@pytest.mark.asyncio
 async def test_user_delete(client: AsyncClient) -> None:
     """Test deleting a user from the database"""
     email = await add_empty_user()

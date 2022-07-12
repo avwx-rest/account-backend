@@ -35,7 +35,9 @@ def make_user(email: str, offset: Optional[int] = 0) -> User:
 async def add_token_usage(user: User, token: UserToken, days: int = 30):
     """Add historic token usage for a user"""
     value = random.randint(0, 3000)
-    today = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today = datetime.now(tz=timezone.utc).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
     tasks = []
     for i in range(-days + 1, 1):
         if not value:

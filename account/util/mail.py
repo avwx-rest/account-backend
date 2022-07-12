@@ -53,6 +53,9 @@ Your account has been disabled after two failed attempts, and your account token
 
 ACCOUNT_ENABLE = "Just letting you know that your account has been re-enabled and your API tokens activated. No further action is required."
 
+CHANGE_EMAIL_OLD = "Your AVWX account email has been changed to {}. If you did not make this change, please contact avwx@dupont.dev immediately."
+CHANGE_EMAIL_NEW = "Your AVWX account email has been changed. No further action is needed."
+
 
 async def _send(email: str, title: str, msg: str) -> None:
     """Send to email or print to console"""
@@ -98,3 +101,10 @@ async def send_disable_email(
 async def send_enabled_email(email: str) -> None:
     """Sends account re-enabled status email"""
     await _send(email, "AVWX Account Re-Enabled", ACCOUNT_ENABLE)
+
+
+async def send_email_change(old: str, new: str) -> None:
+    """Sends email chnage to old and new address"""
+    title = "AVWX Change Passord"
+    await _send(old, title, CHANGE_EMAIL_OLD.format(new))
+    await _send(new, title, CHANGE_EMAIL_NEW)
