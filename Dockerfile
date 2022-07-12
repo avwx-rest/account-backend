@@ -1,4 +1,4 @@
-# Start from the official Python 3.9 container
+# Start from the official Python 3.10 container
 FROM python:3.10.5
 
 # Expose the default application port
