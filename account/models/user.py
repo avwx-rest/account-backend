@@ -46,7 +46,7 @@ class UserToken(Token):
     def _gen(self):
         value = token_urlsafe(32)
         if self.type == "dev":
-            value = "dev-" + value[4:]
+            value = f"dev-{value[4:]}"
         self.value = value  # pylint: disable=attribute-defined-outside-init
 
     @classmethod
@@ -137,9 +137,7 @@ class User(Document, UserOut):
         return hash(self.email)
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, User):
-            return self.email == other.email
-        return False
+        return self.email == other.email if isinstance(other, User) else False
 
     @property
     def created(self) -> datetime:

@@ -73,14 +73,14 @@ async def _send(email: str, title: str, msg: str) -> None:
 async def send_verification_email(email: str, token: str) -> None:
     """Send user verification email"""
     # Change this later to public endpoint
-    url = CONFIG.root_url + "/verify-email?t=" + token
+    url = f"{CONFIG.root_url}/verify-email?t={token}"
     await _send(email, "AVWX Email Verification", VERIFY_TEMPLATE.format(url))
 
 
 async def send_password_reset_email(email: str, token: str) -> None:
     """Sends password reset email"""
     # Change this later to public endpoint
-    url = CONFIG.root_url + "/forgot-password?t=" + token
+    url = f"{CONFIG.root_url}/forgot-password?t={token}"
     await _send(email, "AVWX Password Reset", RESET_TEMPLATE.format(url))
 
 
