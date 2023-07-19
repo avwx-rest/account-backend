@@ -33,9 +33,7 @@ class PlanOut(BaseModel):
     def __eq__(self, other) -> bool:
         if not other:
             return False
-        if isinstance(other, str):
-            return self.key == other
-        return self.key == other.key
+        return self.key == other if isinstance(other, str) else self.key == other.key
 
     def __lt__(self, other) -> bool:
         if other is None:
@@ -66,8 +64,7 @@ class Plan(Document, PlanOut):
     @classmethod
     async def by_key(cls, key: str) -> "Plan":
         """Get a plan by key"""
-        plan = await cls.find_one(cls.key == key)
-        return plan
+        return await cls.find_one(cls.key == key)
 
     @classmethod
     async def by_stripe_id(cls, id: str) -> "Plan":

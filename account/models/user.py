@@ -191,10 +191,7 @@ class User(Document, UserOut):
 
     def has_addon(self, key: str) -> bool:
         """Returns True if the user has an addon with a matching key"""
-        for addon in self.addons:
-            if addon.key == key:
-                return True
-        return False
+        return any(addon.key == key for addon in self.addons)
 
     def replace_addon(self, addon: UserAddon) -> None:
         """Replaces and Addon with the same key value"""

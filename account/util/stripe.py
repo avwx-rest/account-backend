@@ -16,8 +16,8 @@ stripe.api_key = CONFIG.stripe_secret_key
 
 _SESSION = {
     "payment_method_types": ["card"],
-    "success_url": CONFIG.root_url + "/stripe/success",
-    "cancel_url": CONFIG.root_url + "/stripe/cancel",
+    "success_url": f"{CONFIG.root_url}/stripe/success",
+    "cancel_url": f"{CONFIG.root_url}/stripe/cancel",
 }
 
 
@@ -44,7 +44,7 @@ def get_portal_session(user: User) -> stripe.billing_portal.Session:
     """Creates a Stripe billing portal session"""
     return stripe.billing_portal.Session.create(
         customer=user.stripe.customer_id,
-        return_url=CONFIG.root_url + "/plans",
+        return_url=f"{CONFIG.root_url}/plans",
     )
 
 
