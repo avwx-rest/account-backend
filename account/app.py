@@ -2,7 +2,7 @@
 Server app config
 """
 
-# pylint: disable=import-error
+from contextlib import asynccontextmanager
 
 import rollbar
 from rollbar.contrib.fastapi import ReporterMiddleware
@@ -10,9 +10,11 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
-from mailchimp3 import MailChimp
 
-from account import models
+from account.models.addon import Addon
+from account.models.plan import Plan
+from account.models.token import TokenUsage
+from account.models.user import User
 from account.config import CONFIG
 
 
@@ -25,6 +27,23 @@ It supports:
 - API token management and usage history
 - API plan and Stripe subscription assignment
 """
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):  # type: ignore
+    """Initialize application services"""
+    # Init Database
+    client = AsyncIOMotorClient(CONFIG.mongo_uri)
+    app.db = client[CONFIG.database]  # type: ignore[attr-defined]
+    documents = [Addon, Plan, TokenUsage, User]
+    await init_beanie(app.db, document_models=documents)  # type: ignore[arg-type,attr-defined]
+    # Init error logging
+    if CONFIG.log_key:
+        rollbar.init(CONFIG.log_key, environment="production", handler="async")
+        app.add_middleware(ReporterMiddleware)
+    print("Startup complete")
+    yield
+    print("Shutdown complete")
 
 
 app = FastAPI(
@@ -40,6 +59,7 @@ app = FastAPI(
         "name": "MIT",
         "url": "https://github.com/avwx-rest/account-backend/blob/main/LICENSE",
     },
+    lifespan=lifespan,
 )
 
 
@@ -50,26 +70,3 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-async def app_init():
-    """Initialize application services"""
-    # Init Database
-    client = AsyncIOMotorClient(CONFIG.mongo_uri)
-    app.db = client[CONFIG.database]
-    documents = [
-        models.addon.Addon,
-        models.plan.Plan,
-        models.token.TokenUsage,
-        models.user.User,
-    ]
-    await init_beanie(app.db, document_models=documents)
-    # Init error logging
-    if CONFIG.log_key:
-        rollbar.init(CONFIG.log_key, environment="production", handler="async")
-        app.add_middleware(ReporterMiddleware)
-    # Init mailing list
-    if CONFIG.mc_key and CONFIG.mc_username:
-        app.chimp = MailChimp(mc_api=CONFIG.mc_key, mc_user=CONFIG.mc_username)
-    print("Startup complete")

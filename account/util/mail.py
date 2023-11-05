@@ -2,7 +2,7 @@
 Mail server config
 """
 
-from fastapi_mail import FastMail, ConnectionConfig, MessageSchema
+from fastapi_mail import FastMail, ConnectionConfig, MessageSchema, MessageType
 
 from account.config import CONFIG
 
@@ -12,8 +12,8 @@ mail_conf = ConnectionConfig(
     MAIL_FROM=CONFIG.mail_sender,
     MAIL_PORT=CONFIG.mail_port,
     MAIL_SERVER=CONFIG.mail_server,
-    MAIL_TLS=True,
-    MAIL_SSL=False,
+    MAIL_STARTTLS=True,
+    MAIL_SSL_TLS=True,
     USE_CREDENTIALS=True,
 )
 
@@ -54,7 +54,9 @@ Your account has been disabled after two failed attempts, and your account token
 ACCOUNT_ENABLE = "Just letting you know that your account has been re-enabled and your API tokens activated. No further action is required."
 
 CHANGE_EMAIL_OLD = "Your AVWX account email has been changed to {}. If you did not make this change, please contact avwx@dupont.dev immediately."
-CHANGE_EMAIL_NEW = "Your AVWX account email has been changed. No further action is needed."
+CHANGE_EMAIL_NEW = (
+    "Your AVWX account email has been changed. No further action is needed."
+)
 
 
 async def _send(email: str, title: str, msg: str) -> None:
@@ -66,6 +68,7 @@ async def _send(email: str, title: str, msg: str) -> None:
             recipients=[email],
             subject=title,
             body=msg,
+            subtype=MessageType.plain,
         )
         await mail.send_message(message)
 

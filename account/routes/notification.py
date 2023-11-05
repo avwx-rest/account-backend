@@ -2,6 +2,8 @@
 Notification router
 """
 
+# mypy: disable-error-code="no-untyped-def"
+
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from account.models.user import Notification, User

@@ -2,10 +2,8 @@
 Server main runtime
 """
 
-# pylint: disable=unused-import,import-error
-
-from account import jwt, routes
-from account.app import app
+from . import routes
+from .app import app
 
 
 for router in routes.ROUTERS:
@@ -13,5 +11,5 @@ for router in routes.ROUTERS:
 
 
 @app.get("/")
-def root():
+def root() -> str:
     return "Hello"

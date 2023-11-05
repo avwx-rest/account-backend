@@ -7,6 +7,11 @@ from httpx import AsyncClient
 from account.models.auth import RefreshToken
 
 
+def auth_header_token(token: str) -> dict[str, str]:
+    """Create authorization headers with a token value"""
+    return {"Authorization": f"Bearer {token}"}
+
+
 async def auth_payload(
     client: AsyncClient, email: str, password: str = None
 ) -> RefreshToken:
@@ -21,4 +26,4 @@ async def auth_headers(
 ) -> dict[str, str]:
     """Returns the authorization headers for an email"""
     auth = await auth_payload(client, email, password)
-    return {"AUTHORIZATION": "Bearer " + auth.access_token}
+    return auth_header_token(auth.access_token)

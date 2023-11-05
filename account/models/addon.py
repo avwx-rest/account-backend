@@ -2,8 +2,6 @@
 Plan add-on models
 """
 
-# pylint: disable=too-few-public-methods
-
 from typing import Optional
 
 from beanie import Document
@@ -16,7 +14,7 @@ class AddonOut(BaseModel):
     key: str
     name: str
     description: str
-    documentation: Optional[str]
+    documentation: str | None
 
 
 class UserAddon(AddonOut):
@@ -29,33 +27,35 @@ class Addon(Document, AddonOut):
     """Plan add-on entitlement"""
 
     product_id: str
-    price_ids: Optional[dict[str, str]]
+    price_ids: dict[str, str]
 
-    class Collection:
+    class Settings:
         """DB collection name"""
 
         name = "addon"
 
     @classmethod
-    async def by_key(cls, key: str) -> "Addon":
+    async def by_key(cls, key: str) -> Optional["Addon"]:
         """Get an add-on by internal key"""
         return await cls.find_one(cls.key == key)
 
     @classmethod
-    async def by_product_id(cls, key: str) -> "Addon":
+    async def by_product_id(cls, key: str) -> Optional["Addon"]:
         """Get an add-on by Stripe product ID"""
         return await cls.find_one(cls.product_id == key)
 
     def to_user(self, plan: str) -> UserAddon:
         """Return a user-specific version of the addon"""
-        try:
-            price = self.price_ids[plan]
-        except (AttributeError, KeyError, TypeError):
+        price = self.price_ids.get(plan)
+        if not price:
             key = "yearly" if plan.endswith("-year") else "monthly"
-            price = self.price_ids[key]
+            price = self.price_ids.get(key)
+        if not price:
+            raise ValueError(f"Unknown addon price for {plan} and {key}")
         return UserAddon(
             key=self.key,
             name=self.name,
             description=self.description,
+            documentation=self.documentation,
             price_id=price,
         )

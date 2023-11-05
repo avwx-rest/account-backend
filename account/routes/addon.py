@@ -2,6 +2,8 @@
 Addon router
 """
 
+# mypy: disable-error-code="no-untyped-def"
+
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from account.models.addon import Addon, AddonOut
@@ -30,6 +32,8 @@ async def new_addon(key: str, user: User = Depends(current_user)):
         raise HTTPException(404, f"Addon with key {key} does not exist")
     if user.has_addon(addon.key):
         raise HTTPException(400, f"User already has the {addon.key} addon")
+    if user.plan is None:
+        raise ValueError("Cannot add addon to user with no plan")
     user_addon = addon.to_user(user.plan.key)
     if not user.has_subscription:
         return get_session(user, user_addon.price_id)
@@ -39,6 +43,7 @@ async def new_addon(key: str, user: User = Depends(current_user)):
     if addon.key == "overage":
         user.allow_overage = True
     await user.save()
+    return None
 
 
 @router.delete("/{key}")

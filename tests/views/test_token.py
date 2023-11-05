@@ -2,7 +2,7 @@
 Token management tests
 """
 
-from datetime import date
+from datetime import datetime
 
 import pytest
 from httpx import AsyncClient
@@ -15,15 +15,15 @@ def assert_app_token(token: dict, name: str = "Token", active: bool = True) -> N
     """Checks for default token values"""
     assert token["name"] == name
     assert token["type"] == "app"
-    assert type(token["value"]) == str
+    assert isinstance(token["value"], str)
     assert token["active"] == active
 
 
 def assert_token_history(history: dict) -> None:
     """Checks token usage fields"""
-    assert type(history["count"]) == int
-    assert type(history["date"]) == str
-    date.fromisoformat(history["date"])
+    assert isinstance(history["count"], int)
+    assert isinstance(history["date"], str)
+    datetime.fromisoformat(history["date"])
 
 
 async def assert_token_count(client: AsyncClient, auth: dict, count: int) -> None:
@@ -31,7 +31,7 @@ async def assert_token_count(client: AsyncClient, auth: dict, count: int) -> Non
     resp = await client.get("/token", headers=auth)
     assert resp.status_code == 200
     data = resp.json()
-    assert type(data) == list
+    assert isinstance(data, list)
     assert len(data) == count
 
 

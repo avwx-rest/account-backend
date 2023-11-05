@@ -8,7 +8,6 @@ from httpx import AsyncClient
 from account.models.user import User
 
 from tests.data import add_empty_user, add_plans
-from tests.util import auth_headers
 
 
 async def assert_user_count(client: AsyncClient, count: int) -> None:

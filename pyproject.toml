@@ -1,0 +1,53 @@
+[project]
+name = "account"
+version = "0.1.0"
+description = "AVWX account management backend service"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "Michael duPont", email="michael@dupont.dev"}
+]
+dependencies = [
+    "bcrypt~=4.0",
+    "beanie~=1.23",
+    "fastapi~=0.104",
+    "fastapi-jwt>=0.2",
+    "fastapi-mail~=1.4",
+    "httpx~=0.25",
+    "kewkew~=0.1",
+    "mailchimp3~=3.0",
+    "python-decouple~=3.8",
+    "rollbar~=0.16",
+    "stripe~=7.3",
+    "uvicorn~=0.24",
+]
+
+[project.optional-dependencies]
+dev = ["mypy", "ruff"]
+test = [
+    "asgi-lifespan~=2.1",
+    "httpx~=0.25",
+    "pytest-asyncio~=0.21",
+]
+
+[project.urls]
+"Source" = "https://github.com/avwx-rest/account-backend"
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_any_unimported = false
+disallow_untyped_defs = true
+explicit_package_bases = true
+ignore_missing_imports = true
+no_implicit_optional = true
+show_error_codes = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_ignores = true
+
+[tool.ruff]
+extend-select = [
+    "UP",
+    # "D"
+]

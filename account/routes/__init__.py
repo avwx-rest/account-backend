@@ -1,4 +1,14 @@
-from . import addon, auth, mail, notification, plan, register, stripe, token, user
+from account.routes import (
+    addon,
+    auth,
+    mail,
+    notification,
+    plan,
+    register,
+    stripe,
+    token,
+    user,
+)
 
 ROUTERS = [
     addon.router,

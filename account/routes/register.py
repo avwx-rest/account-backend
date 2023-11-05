@@ -2,11 +2,13 @@
 Registration router
 """
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Response
-from fastapi_jwt_auth import AuthJWT
+# mypy: disable-error-code="no-untyped-def"
+
+from fastapi import APIRouter, Body, HTTPException, Response
 from pydantic import EmailStr
 
 from account.models.user import User, UserRegister, UserOut
+from account.jwt import access_security, user_from_token
 from account.util.mail import send_password_reset_email
 from account.util.password import hash_password
 from account.util.recaptcha import verify
@@ -32,7 +34,7 @@ async def user_registration(user_auth: UserRegister):
 
 
 @router.post("/forgot-password")
-async def forgot_password(email: EmailStr = embed, auth: AuthJWT = Depends()):
+async def forgot_password(email: EmailStr = embed):
     """Sends password reset email"""
     user = await User.by_email(email)
     if user is None:
@@ -41,17 +43,15 @@ async def forgot_password(email: EmailStr = embed, auth: AuthJWT = Depends()):
         raise HTTPException(400, "Email is not yet verified")
     if user.disabled:
         raise HTTPException(400, "Your account is disabled")
-    token = auth.create_access_token(user.email)
+    token = access_security.create_access_token(user.jwt_subject)
     await send_password_reset_email(email, token)
     return Response(status_code=200)
 
 
 @router.post("/reset-password/{token}", response_model=UserOut)
-async def reset_password(token: str, password: str = embed, auth: AuthJWT = Depends()):
+async def reset_password(token: str, password: str = embed):
     """Reset user password from token value"""
-    # Manually assign the token value
-    auth._token = token  # pylint: disable=protected-access
-    user = await User.by_email(auth.get_jwt_subject())
+    user = await user_from_token(token)
     if user is None:
         raise HTTPException(404, "No user found with that email")
     if user.email_confirmed_at is None:

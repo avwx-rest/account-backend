@@ -2,10 +2,13 @@
 User router
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Response
-from fastapi_jwt_auth import AuthJWT
+# mypy: disable-error-code="no-untyped-def"
+
+from fastapi import APIRouter, Depends, HTTPException, Response, Security
+from fastapi_jwt import JwtAuthorizationCredentials
 
 from account.models.user import User, UserOut, UserUpdate
+from account.jwt import access_security
 from account.util.current_user import current_user
 from account.util.mail import send_email_change
 from account.util.mailing import update_mailing
@@ -39,8 +42,7 @@ async def update_user(update: UserUpdate, user: User = Depends(current_user)):
 
 
 @router.delete("")
-async def delete_user(auth: AuthJWT = Depends()):
+async def delete_user(auth: JwtAuthorizationCredentials = Security(access_security)):
     """Delete current user"""
-    auth.jwt_required()
-    await User.find_one(User.email == auth.get_jwt_subject()).delete()
+    await User.find_one(User.email == auth.subject["username"]).delete()
     return Response(status_code=204)

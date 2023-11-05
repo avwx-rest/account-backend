@@ -2,6 +2,8 @@
 Plan router
 """
 
+# mypy: disable-error-code="no-untyped-def"
+
 from fastapi import APIRouter, Body, Depends, HTTPException
 
 from account.models.plan import Plan, PlanOut
@@ -15,6 +17,8 @@ router = APIRouter(prefix="/plan", tags=["Plan"])
 @router.get("", response_model=PlanOut)
 async def get_user_plan(user: User = Depends(current_user)):
     """Returns the current user's plan"""
+    if not user.plan:
+        raise HTTPException(404, "User has no plan")
     return user.plan
 
 
@@ -28,6 +32,8 @@ async def change_plan(
     plan = await Plan.by_key(key)
     if plan is None:
         raise HTTPException(404, f"Plan with key {key} does not exist")
+    if user.plan is None:
+        raise HTTPException(404, "User has no plan")
     if user.plan.key == plan.key:
         raise HTTPException(400, f"User is already subscribed to the {plan.name} plan")
     msg = f"Your {plan.name} plan is now active"
@@ -42,6 +48,7 @@ async def change_plan(
         await user.add_notification("error", "Unable to cancel your subscription")
         raise HTTPException(500, "Unable to cancel your subscription")
     await user.add_notification("success", msg)
+    return None
 
 
 @router.get("/all", response_model=list[PlanOut])

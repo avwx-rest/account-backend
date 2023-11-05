@@ -2,10 +2,7 @@
 Token models
 """
 
-# pylint: disable=too-few-public-methods
-
 from datetime import date, datetime
-from typing import Optional
 
 from beanie import Document, PydanticObjectId
 from bson.objectid import ObjectId
@@ -17,8 +14,8 @@ from account.models.helpers import ObjectIdStr
 class TokenUpdate(BaseModel):
     """Updatable token fields"""
 
-    name: Optional[str] = None
-    active: Optional[bool] = None
+    name: str | None = None
+    active: bool | None = None
 
 
 class Token(BaseModel):
@@ -34,7 +31,7 @@ class Token(BaseModel):
 class TokenUsageOut(BaseModel):
     """Token usage fields returned to the user"""
 
-    count: int
+    usage: int = Field(alias="count")
     date: date
 
 
@@ -46,7 +43,7 @@ class TokenUsage(Document, TokenUsageOut):
     date: datetime
     updated: datetime
 
-    class Collection:
+    class Settings:
         """DB collection name"""
 
         name = "token"

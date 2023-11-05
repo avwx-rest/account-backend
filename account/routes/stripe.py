@@ -2,6 +2,9 @@
 Stripe callback router
 """
 
+# mypy: disable-error-code="no-untyped-def"
+
+import rollbar
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from stripe.error import SignatureVerificationError
 
@@ -55,7 +58,7 @@ _EVENTS = {
 @router.post("/fulfill")
 async def stripe_fulfill(request: Request, stripe_signature: str = Header(None)):
     """Stripe event handler"""
-    data = await request.body()
+    data = await request.json()
     try:
         event = get_event(data, stripe_signature)
     except (ValueError, SignatureVerificationError) as exc:
@@ -66,13 +69,14 @@ async def stripe_fulfill(request: Request, stripe_signature: str = Header(None))
             return Response()
     else:
         print(f"Unhandled event type {event_type}")
+        rollbar.report_message(event)
     raise HTTPException(400)
 
 
 @router.get("/portal")
 async def customer_portal(user: User = Depends(current_user)):
     """Returns the user's Stripe account portal URL"""
-    if not user.stripe and user.stripe.customer_id:
+    if not user.stripe or user.stripe.customer_id:
         return None
     session = get_portal_session(user)
     return {"url": session.url}

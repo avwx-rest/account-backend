@@ -5,9 +5,8 @@ Test data handlers
 import asyncio as aio
 import json
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from pathlib import Path
-from typing import Optional
 
 from account.models.plan import Plan
 from account.models.token import TokenUsage
@@ -19,11 +18,11 @@ DATA = Path(__file__).parent / "data"
 PLANS = json.load(DATA.joinpath("plans.json").open())
 
 
-def make_user(email: str, offset: Optional[int] = 0) -> User:
+def make_user(email: str, offset: int | None = 0) -> User:
     """Returns a minimal, uncommitted User"""
     now = None
     if offset is not None:
-        now = datetime.now(tz=timezone.utc) - timedelta(days=offset)
+        now = datetime.now(tz=UTC) - timedelta(days=offset)
     user = User(
         email=email,
         password=hash_password(email),
@@ -35,9 +34,7 @@ def make_user(email: str, offset: Optional[int] = 0) -> User:
 async def add_token_usage(user: User, token: UserToken, days: int = 30):
     """Add historic token usage for a user"""
     value = random.randint(0, 3000)
-    today = datetime.now(tz=timezone.utc).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
+    today = datetime.now(tz=UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     tasks = []
     for i in range(-days + 1, 1):
         if not value:
@@ -46,7 +43,7 @@ async def add_token_usage(user: User, token: UserToken, days: int = 30):
         usage = TokenUsage(
             token_id=token.id,
             user_id=user.id,
-            count=value,
+            usage=value,
             date=date,
             updated=date,
         )

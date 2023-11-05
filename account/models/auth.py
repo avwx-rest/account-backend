@@ -2,15 +2,11 @@
 Auth response models
 """
 
-# pylint: disable=too-few-public-methods
-
 from datetime import timedelta
 
 from pydantic import BaseModel
 
-
-ACCESS_EXPIRES = timedelta(minutes=15)
-REFRESH_EXPIRES = timedelta(days=30)
+from account.jwt import ACCESS_EXPIRES, REFRESH_EXPIRES
 
 
 class AccessToken(BaseModel):

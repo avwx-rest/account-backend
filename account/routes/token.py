@@ -2,7 +2,9 @@
 Token management router
 """
 
-from datetime import datetime, timedelta, timezone
+# mypy: disable-error-code="no-untyped-def"
+
+from datetime import datetime, timedelta, UTC
 
 from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -38,7 +40,7 @@ async def new_token(user: User = Depends(current_user)):
 @router.get("/history", response_model=list[AllTokenUsageOut])
 async def get_all_history(days: int = 30, user: User = Depends(current_user)):
     """Returns all recent token history"""
-    days_since = datetime.now(tz=timezone.utc) - timedelta(days=days)
+    days_since = datetime.now(tz=UTC) - timedelta(days=days)
     data = (
         await TokenUsage.find(
             TokenUsage.user_id == ObjectId(user.id),
@@ -116,7 +118,7 @@ async def get_token_history(
     _, token = user.get_token(value)
     if token is None:
         raise HTTPException(404, f"Token with value {value} does not exist")
-    days_since = datetime.now(tz=timezone.utc) - timedelta(days=days)
+    days_since = datetime.now(tz=UTC) - timedelta(days=days)
     return await TokenUsage.find(
         TokenUsage.token_id == ObjectId(token.id), TokenUsage.date >= days_since
     ).to_list()
