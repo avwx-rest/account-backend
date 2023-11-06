@@ -1,13 +1,11 @@
-"""
-FastAPI server configuration
-"""
+"""FastAPI server configuration."""
 
 from decouple import config
 from pydantic import BaseModel
 
 
 class Settings(BaseModel):
-    """Server config settings"""
+    """Server config settings."""
 
     # Mongo Engine settings
     mongo_uri: str = config("MONGO_URI", default="mongodb://localhost:27017")

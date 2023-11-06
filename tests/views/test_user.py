@@ -1,6 +1,4 @@
-"""
-User information tests
-"""
+"""User information tests."""
 
 import pytest
 from httpx import AsyncClient
@@ -11,7 +9,7 @@ from tests.util import auth_headers
 
 @pytest.mark.asyncio
 async def test_user_get(client: AsyncClient) -> None:
-    """Test user endpoint returns authorized user"""
+    """Test user endpoint returns authorized user."""
     email = await add_empty_user()
     auth = await auth_headers(client, email)
     resp = await client.get("/user", headers=auth)
@@ -22,7 +20,7 @@ async def test_user_get(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_user_update(client: AsyncClient) -> None:
-    """Test updating user fields"""
+    """Test updating user fields."""
     email = await add_empty_user()
     name, key = "Empty", "first_name"
     auth = await auth_headers(client, email)
@@ -48,7 +46,7 @@ async def test_user_update(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_user_update_email(client: AsyncClient) -> None:
-    """Test updating user email"""
+    """Test updating user email."""
     email = await add_empty_user()
     new_email, key = "test_replace@test.io", "email"
     auth = await auth_headers(client, email)
@@ -57,7 +55,6 @@ async def test_user_update_email(client: AsyncClient) -> None:
     data = resp.json()
     assert data[key] == email
     # Update email
-    new_email = "test_replace@test.io"
     resp = await client.patch("/user", headers=auth, json={key: new_email})
     assert resp.status_code == 200
     data = resp.json()
@@ -75,7 +72,7 @@ async def test_user_update_email(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_user_delete(client: AsyncClient) -> None:
-    """Test deleting a user from the database"""
+    """Test deleting a user from the database."""
     email = await add_empty_user()
     auth = await auth_headers(client, email)
     resp = await client.get("/user", headers=auth)

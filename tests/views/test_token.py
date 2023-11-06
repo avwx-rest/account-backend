@@ -1,6 +1,4 @@
-"""
-Token management tests
-"""
+"""Token management tests."""
 
 from datetime import datetime
 
@@ -12,7 +10,7 @@ from tests.util import auth_headers
 
 
 def assert_app_token(token: dict, name: str = "Token", active: bool = True) -> None:
-    """Checks for default token values"""
+    """Check for default token values."""
     assert token["name"] == name
     assert token["type"] == "app"
     assert isinstance(token["value"], str)
@@ -20,14 +18,14 @@ def assert_app_token(token: dict, name: str = "Token", active: bool = True) -> N
 
 
 def assert_token_history(history: dict) -> None:
-    """Checks token usage fields"""
+    """Check token usage fields."""
     assert isinstance(history["count"], int)
     assert isinstance(history["date"], str)
     datetime.fromisoformat(history["date"])
 
 
 async def assert_token_count(client: AsyncClient, auth: dict, count: int) -> None:
-    """Asserts that the user has the expected number of tokens"""
+    """Assert that the user has the expected number of tokens."""
     resp = await client.get("/token", headers=auth)
     assert resp.status_code == 200
     data = resp.json()
@@ -36,15 +34,17 @@ async def assert_token_count(client: AsyncClient, auth: dict, count: int) -> Non
 
 
 async def get_token(client: AsyncClient, auth: dict, index: int = 0) -> dict:
-    """Returns an existing token"""
+    """Return an existing token."""
     resp = await client.get("/token", headers=auth)
     assert resp.status_code == 200
-    return resp.json()[index]
+    tokens: list[dict] = resp.json()
+    assert len(tokens) > 0
+    return tokens[index]
 
 
 @pytest.mark.asyncio
 async def test_get_all_tokens(client: AsyncClient) -> None:
-    """Test user endpoint returns authorized user"""
+    """Test user endpoint returns authorized user."""
     email = await add_token_user()
     auth = await auth_headers(client, email)
     resp = await client.get("/token", headers=auth)
@@ -56,7 +56,7 @@ async def test_get_all_tokens(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_new_token(client: AsyncClient) -> None:
-    """Test creation of a new user token"""
+    """Test creation of a new user token."""
     email = await add_empty_user()
     auth = await auth_headers(client, email)
     # Check no tokens
@@ -72,7 +72,7 @@ async def test_new_token(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_get_token(client: AsyncClient) -> None:
-    """Test fetching a user token by value"""
+    """Test fetching a user token by value."""
     email = await add_token_user()
     auth = await auth_headers(client, email)
     token = await get_token(client, auth)
@@ -86,7 +86,7 @@ async def test_get_token(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_update_token(client: AsyncClient) -> None:
-    """Test updating fields of a user token"""
+    """Test updating fields of a user token."""
     email = await add_token_user()
     auth = await auth_headers(client, email)
     value = (await get_token(client, auth))["_id"]
@@ -102,7 +102,7 @@ async def test_update_token(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_delete_token(client: AsyncClient) -> None:
-    """Test deleting a new user token"""
+    """Test deleting a new user token."""
     email = await add_token_user()
     auth = await auth_headers(client, email)
     value = (await get_token(client, auth))["_id"]
@@ -117,7 +117,7 @@ async def test_delete_token(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_token_refresh(client: AsyncClient) -> None:
-    """Test refreshing a user token's value"""
+    """Test refreshing a user token's value."""
     email = await add_token_user()
     auth = await auth_headers(client, email)
     token_obj = await get_token(client, auth)
@@ -133,7 +133,7 @@ async def test_token_refresh(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_token_history(client: AsyncClient) -> None:
-    """Test fetching a user's token usage history"""
+    """Test fetching a user's token usage history."""
     email = await add_token_user(history=True)
     auth = await auth_headers(client, email)
     value = (await get_token(client, auth))["_id"]

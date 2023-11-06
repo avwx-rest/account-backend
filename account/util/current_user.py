@@ -1,6 +1,4 @@
-"""
-Current user dependency
-"""
+"""Current user dependency."""
 
 from fastapi import HTTPException, Security
 from fastapi_jwt import JwtAuthorizationCredentials
@@ -12,7 +10,7 @@ from account.jwt import access_security, user_from_credentials
 async def current_user(
     auth: JwtAuthorizationCredentials = Security(access_security)
 ) -> User:
-    """Returns the current authorized user"""
+    """Return the current authorized user."""
     if not auth:
         raise HTTPException(401, "No authorization credentials found")
     user = await user_from_credentials(auth)

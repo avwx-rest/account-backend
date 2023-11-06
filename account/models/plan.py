@@ -1,6 +1,4 @@
-"""
-Pricing plan models
-"""
+"""Pricing plan models."""
 
 from typing import Annotated, Any, Optional
 
@@ -9,7 +7,7 @@ from pydantic import BaseModel
 
 
 class PlanOut(BaseModel):
-    """Plan fields returned to the user"""
+    """Plan fields returned to the user."""
 
     key: str
     name: str
@@ -57,22 +55,22 @@ class PlanOut(BaseModel):
 
 
 class Plan(Document, PlanOut):
-    """Plan DB representation"""
+    """Plan DB representation."""
 
     key: Annotated[str, Indexed(str, unique=True)]
     stripe_id: str | None = None
 
     class Settings:
-        """DB collection name"""
+        """DB collection name."""
 
         name = "plan"
 
     @classmethod
     async def by_key(cls, key: str) -> Optional["Plan"]:
-        """Get a plan by key"""
+        """Get a plan by key."""
         return await cls.find_one(cls.key == key)
 
     @classmethod
     async def by_stripe_id(cls, id: str) -> Optional["Plan"]:
-        """Get a plan by Stripe product ID"""
+        """Get a plan by Stripe product ID."""
         return await cls.find_one(cls.stripe_id == id)

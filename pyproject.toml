@@ -49,5 +49,10 @@ warn_unused_ignores = true
 [tool.ruff]
 extend-select = [
     "UP",
-    # "D"
+    "D",
+]
+ignore = [
+    "D105",
+    "D203",
+    "D213",
 ]

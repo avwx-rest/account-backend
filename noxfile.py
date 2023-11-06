@@ -1,8 +1,11 @@
+"""Run nox test environment."""
+
 import nox
 
 
-@nox.session(python="3.10")
-def tests(session):
-    session.install("-r", "requirements.txt")
-    session.install("-r", "tests/requirements.txt")
+@nox.session(python="3.11")
+def tests(session: nox.Session) -> None:
+    """Run test suite."""
+    session.install(".")
+    session.install(".[test]")
     session.run("pytest", "--disable-warnings")

@@ -1,8 +1,4 @@
-"""
-Stripe callback router
-"""
-
-# mypy: disable-error-code="no-untyped-def"
+"""Stripe callback router."""
 
 import rollbar
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
@@ -23,8 +19,8 @@ router = APIRouter(prefix="/stripe", tags=["Stripe"])
 
 
 @router.get("/success", response_model=UserOut)
-async def stripe_success(user: User = Depends(current_user)):
-    """Adds success notification after sign-up"""
+async def stripe_success(user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+    """Add success notification after sign-up."""
     await user.add_notification(
         "success", "Your sign-up was successful. Thank you for supporting AVWX!"
     )
@@ -32,8 +28,8 @@ async def stripe_success(user: User = Depends(current_user)):
 
 
 @router.get("/cancel", response_model=UserOut)
-async def stripe_cancel(user: User = Depends(current_user)):
-    """Adds cancelled notification after sign-up"""
+async def stripe_cancel(user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+    """Add cancelled notification after sign-up."""
     await user.add_notification(
         "info", "It looks like you cancelled sign-up. No changes have been made"
     )
@@ -56,8 +52,10 @@ _EVENTS = {
 
 
 @router.post("/fulfill")
-async def stripe_fulfill(request: Request, stripe_signature: str = Header(None)):
-    """Stripe event handler"""
+async def stripe_fulfill(
+    request: Request, stripe_signature: str = Header(None)
+) -> Response:
+    """Stripe event handler."""
     data = await request.json()
     try:
         event = get_event(data, stripe_signature)
@@ -74,8 +72,8 @@ async def stripe_fulfill(request: Request, stripe_signature: str = Header(None))
 
 
 @router.get("/portal")
-async def customer_portal(user: User = Depends(current_user)):
-    """Returns the user's Stripe account portal URL"""
+async def customer_portal(user: User = Depends(current_user)) -> dict[str, str] | None:
+    """Return the user's Stripe account portal URL."""
     if not user.stripe or user.stripe.customer_id:
         return None
     session = get_portal_session(user)

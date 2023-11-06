@@ -1,5 +1,5 @@
-# Start from the official Python 3.10 container
-FROM python:3.10.5
+# Start from the official Python 3.11 container
+FROM python:3.11.5
 
 # Expose the default application port
 EXPOSE 8080
@@ -10,13 +10,11 @@ WORKDIR /home/api
 # Create new user to run as non-root
 RUN useradd -m -r user && chown user /home/api
 
-# Install the require Python packages
-COPY requirements.txt .
-RUN pip install -U pip
-RUN pip install -Ur requirements.txt --no-cache-dir --compile
-
-# Copy the application code
+# Install the required Python packages
+COPY pyproject.toml .
 COPY ./account ./account
+RUN pip install -U pip
+RUN pip install -U . --no-cache-dir --compile
 
 # Run as new user
 USER user

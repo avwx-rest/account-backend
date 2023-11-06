@@ -1,6 +1,4 @@
-"""
-Authentication tests
-"""
+"""Authentication tests."""
 
 import pytest
 from httpx import AsyncClient
@@ -11,7 +9,7 @@ from tests.util import auth_header_token, auth_payload
 
 @pytest.mark.asyncio
 async def test_not_authorized(client: AsyncClient) -> None:
-    """Test user not authorized if required"""
+    """Test user not authorized if required."""
     resp = await client.get("/user")
     assert resp.status_code == 401
     headers = auth_header_token("eyJ0eXAiOiJKV1QiLCJhbG")
@@ -21,7 +19,7 @@ async def test_not_authorized(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_refresh(client: AsyncClient) -> None:
-    """Test refresh token updates access token"""
+    """Test refresh token updates access token."""
     email = await add_empty_user()
     # Check login
     auth = await auth_payload(client, email)

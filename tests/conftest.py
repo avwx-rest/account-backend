@@ -1,8 +1,6 @@
-"""
-Pytest fixtures
-"""
+"""Pytest fixtures."""
 
-from collections.abc import Iterator
+from collections.abc import AsyncIterator
 
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
@@ -22,14 +20,14 @@ from account.main import app  # noqa: E402
 
 
 async def clear_database(server: FastAPI) -> None:
-    """Empties the test database"""
-    async for collection in await server.db.list_collections():
-        await server.db[collection["name"]].delete_many({})
+    """Empty the test database."""
+    async for collection in await server.db.list_collections():  # type: ignore[attr-defined]
+        await server.db[collection["name"]].delete_many({})  # type: ignore[attr-defined]
 
 
 @pytest_asyncio.fixture()
-async def client() -> Iterator[AsyncClient]:
-    """Async server client that handles lifespan and teardown"""
+async def client() -> AsyncIterator[AsyncClient]:
+    """Async server client that handles lifespan and teardown."""
     async with LifespanManager(app):
         async with AsyncClient(app=app, base_url="http://test") as _client:
             try:

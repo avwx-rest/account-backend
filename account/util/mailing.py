@@ -1,6 +1,4 @@
-"""
-Mailing list manager
-"""
+"""Mailing list manager."""
 
 import hashlib
 
@@ -14,10 +12,10 @@ from account.models.user import User
 
 
 class MailingKew(Kew):
-    """Mailing list queue manager"""
+    """Mailing list queue manager."""
 
     async def worker(self, data: tuple[User, bool]) -> bool:
-        """Queue worker to add/remove subscriber and update"""
+        """Queue worker to add/remove subscriber and update."""
         match data:
             case (user, True | False as add):
                 handler = _add_to_mailing if add else _remove_from_mailing
@@ -36,7 +34,7 @@ if not CONFIG.testing:
 
 
 async def add_to_mailing(user: User) -> None:
-    """Add an email to the mailing list"""
+    """Add an email to the mailing list."""
     if not CONFIG.testing:
         await kew.add((user, True))
     user.subscribed = True
@@ -61,7 +59,7 @@ def _add_to_mailing(email: str) -> bool:
 
 
 async def remove_from_mailing(user: User) -> None:
-    """Delete an email from the mailing list"""
+    """Delete an email from the mailing list."""
     if not CONFIG.testing:
         await kew.add((user, False))
     user.subscribed = False
@@ -79,7 +77,7 @@ def _remove_from_mailing(email: str) -> bool:
 
 
 async def update_mailing(old: str, new: str) -> None:
-    """Update an email on the mailing list"""
+    """Update an email on the mailing list."""
     if not CONFIG.testing:
         await kew.add((old, new))
 

@@ -1,8 +1,4 @@
-"""
-Email router
-"""
-
-# mypy: disable-error-code="no-untyped-def"
+"""Email router."""
 
 from datetime import datetime, UTC
 
@@ -20,8 +16,10 @@ router = APIRouter(prefix="/mail", tags=["Mail"])
 
 
 @router.post("/verify")
-async def request_verification_email(email: EmailStr = Body(..., embed=True)):
-    """Send the user a verification email"""
+async def request_verification_email(
+    email: EmailStr = Body(..., embed=True)
+) -> Response:
+    """Send the user a verification email."""
     user = await User.by_email(email)
     if user is None:
         raise HTTPException(404, "No user found with that email")
@@ -35,8 +33,8 @@ async def request_verification_email(email: EmailStr = Body(..., embed=True)):
 
 
 @router.post("/verify/{token}")
-async def verify_email(token: str):
-    """Verify the user's email with the supplied token"""
+async def verify_email(token: str) -> Response:
+    """Verify the user's email with the supplied token."""
     user = await user_from_token(token)
     if user is None:
         raise HTTPException(404, "No user found with that email")
@@ -50,8 +48,8 @@ async def verify_email(token: str):
 
 
 @router.post("/list")
-async def add_to_mailing_list(user: User = Depends(current_user)):
-    """Add the user to the mailing list"""
+async def add_to_mailing_list(user: User = Depends(current_user)) -> Response:
+    """Add the user to the mailing list."""
     if user.subscribed:
         raise HTTPException(400, "User is already subscribed")
     await add_to_mailing(user)
@@ -60,8 +58,8 @@ async def add_to_mailing_list(user: User = Depends(current_user)):
 
 
 @router.delete("/list")
-async def remove_from_mailing_list(user: User = Depends(current_user)):
-    """Remove the user from the mailing list"""
+async def remove_from_mailing_list(user: User = Depends(current_user)) -> Response:
+    """Remove the user from the mailing list."""
     if not user.subscribed:
         raise HTTPException(400, "User is already unsubscribed")
     await remove_from_mailing(user)

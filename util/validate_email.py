@@ -1,15 +1,11 @@
-"""
-Verify a user's email
-"""
-
+"""Verify a user's email."""
 
 # stdlib
-from datetime import datetime
+from datetime import datetime, UTC
 from os import environ
 
 # library
 import typer
-from datetime import timezone
 from dotenv import load_dotenv
 from pymongo import MongoClient
 
@@ -17,9 +13,9 @@ load_dotenv()
 
 
 def validate_email(email: str) -> int:
-    """Force validates a user's email"""
-    mdb = MongoClient(environ["MONGO_URI"])
-    command = {"$set": {"email_confirmed_at": datetime.now(timezone.utc)}}
+    """Force validates a user's email."""
+    mdb: MongoClient = MongoClient(environ["MONGO_URI"])
+    command = {"$set": {"email_confirmed_at": datetime.now(tz=UTC)}}
     resp = mdb.account.user.update_one({"email": email}, command)
     if not resp.matched_count:
         print(f"No user found for {email}")

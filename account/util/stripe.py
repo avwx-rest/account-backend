@@ -1,6 +1,4 @@
-"""
-Stripe subscription utilities
-"""
+"""Stripe subscription utilities."""
 
 import stripe
 from stripe import Event, Subscription, Webhook
@@ -22,7 +20,7 @@ _SESSION = {
 
 
 def get_session(user: User, price_id: str) -> stripe.checkout.Session:
-    """Creates a Stripe Session object to start a Checkout"""
+    """Create a Stripe Session object to start a Checkout."""
     params = {
         "client_reference_id": user.id,
         "subscription_data": {"items": [{"plan": price_id}]},
@@ -36,13 +34,13 @@ def get_session(user: User, price_id: str) -> stripe.checkout.Session:
 
 
 def get_event(payload: dict, sig: str) -> Event:
-    """Validates a Stripe event to weed out hacked calls"""
+    """Validate a Stripe event to weed out hacked calls."""
     event: Event = Webhook.construct_event(payload, sig, CONFIG.stripe_sign_secret)
     return event
 
 
 def get_portal_session(user: User) -> stripe.billing_portal.Session:
-    """Creates a Stripe billing portal session"""
+    """Create a Stripe billing portal session."""
     if user.stripe is None:
         raise ValueError("Cannot create billing session without stripe info")
     return stripe.billing_portal.Session.create(
@@ -52,7 +50,7 @@ def get_portal_session(user: User) -> stripe.billing_portal.Session:
 
 
 async def new_subscription(session: dict) -> bool:
-    """Create a new subscription for a validated Checkout Session"""
+    """Create a new subscription for a validated Checkout Session."""
     user = await User.from_stripe_session(session)
     if user is None or user.plan is None:
         return False
@@ -73,7 +71,7 @@ async def new_subscription(session: dict) -> bool:
 
 
 async def change_subscription(user: User, plan: Plan) -> bool:
-    """Change the subscription from one plan to another"""
+    """Change the subscription from one plan to another."""
     if not user.stripe:
         return False
     sub_id = user.stripe.subscription_id
@@ -106,7 +104,7 @@ async def change_subscription(user: User, plan: Plan) -> bool:
 
 
 async def cancel_subscription(user: User, keep_addons: bool = False) -> bool:
-    """Cancel a subscription"""
+    """Cancel a subscription."""
     if user.stripe is None or user.plan is None:
         return False
     if user.stripe.subscription_id:
@@ -122,7 +120,7 @@ async def cancel_subscription(user: User, keep_addons: bool = False) -> bool:
 
 
 def add_to_subscription(user: User, price_id: str) -> bool:
-    """Add an addon to an existing subscription"""
+    """Add an addon to an existing subscription."""
     if not user.has_subscription or user.stripe is None:
         return False
     stripe.SubscriptionItem.create(
@@ -132,7 +130,7 @@ def add_to_subscription(user: User, price_id: str) -> bool:
 
 
 def remove_from_subscription(user: User, price_id: str | None = None) -> bool:
-    """Remove an addon from a subscription"""
+    """Remove an addon from a subscription."""
     if (
         not user.has_subscription
         or user.stripe is None
@@ -159,7 +157,7 @@ def remove_from_subscription(user: User, price_id: str | None = None) -> bool:
 
 
 def update_email(user: User, new_email: str) -> bool:
-    """Update the email associated with the Stripe user"""
+    """Update the email associated with the Stripe user."""
     if not user.has_subscription or user.stripe is None:
         return False
     stripe.Customer.modify(user.stripe.customer_id, email=new_email)
@@ -167,7 +165,7 @@ def update_email(user: User, new_email: str) -> bool:
 
 
 async def invoice_paid(invoice: dict) -> bool:
-    """Re-enable a user account after invoice payment"""
+    """Re-enable a user account after invoice payment."""
     user = await User.by_customer_id(invoice["customer"])
     if user is None:
         return False
@@ -179,7 +177,7 @@ async def invoice_paid(invoice: dict) -> bool:
 
 
 async def invoice_failed(invoice: dict) -> bool:
-    """Disable user account if two or more failed invoices"""
+    """Disable user account if two or more failed invoices."""
     if invoice["paid"]:
         return True
     attempts = invoice["attempt_count"]

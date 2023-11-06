@@ -1,8 +1,4 @@
-"""
-Token management router
-"""
-
-# mypy: disable-error-code="no-untyped-def"
+"""Token management router."""
 
 from datetime import datetime, timedelta, UTC
 
@@ -23,14 +19,14 @@ router = APIRouter(prefix="/token", tags=["Token"])
 
 
 @router.get("", response_model=list[Token])
-async def get_user_tokens(user: User = Depends(current_user)):
-    """Returns the current user's tokens"""
+async def get_user_tokens(user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+    """Return the current user's tokens."""
     return user.tokens
 
 
 @router.post("", response_model=Token)
-async def new_token(user: User = Depends(current_user)):
-    """Creates a new user token"""
+async def new_token(user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+    """Create a new user token."""
     token = await UserToken.new()
     user.tokens.append(token)
     await user.save()
@@ -38,8 +34,8 @@ async def new_token(user: User = Depends(current_user)):
 
 
 @router.get("/history", response_model=list[AllTokenUsageOut])
-async def get_all_history(days: int = 30, user: User = Depends(current_user)):
-    """Returns all recent token history"""
+async def get_all_history(days: int = 30, user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+    """Return all recent token history."""
     days_since = datetime.now(tz=UTC) - timedelta(days=days)
     data = (
         await TokenUsage.find(
@@ -66,8 +62,8 @@ async def get_all_history(days: int = 30, user: User = Depends(current_user)):
 
 
 @router.get("/{value}", response_model=Token)
-async def get_token(value: str, user: User = Depends(current_user)):
-    """Returns token details by string value"""
+async def get_token(value: str, user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+    """Return token details by string value."""
     _, token = user.get_token(value)
     if token is None:
         raise HTTPException(404, f"Token with value {value} does not exist")
@@ -75,10 +71,10 @@ async def get_token(value: str, user: User = Depends(current_user)):
 
 
 @router.patch("/{value}", response_model=Token)
-async def update_token(
+async def update_token(  # type: ignore[no-untyped-def]
     value: str, update: TokenUpdate, user: User = Depends(current_user)
 ):
-    """Updates token details by string value"""
+    """Update token details by string value."""
     i, token = user.get_token(value)
     if token is None:
         raise HTTPException(404, f"Token with value {value} does not exist")
@@ -89,8 +85,8 @@ async def update_token(
 
 
 @router.delete("/{value}")
-async def delete_token(value: str, user: User = Depends(current_user)):
-    """Deletes a token by string value"""
+async def delete_token(value: str, user: User = Depends(current_user)) -> Response:
+    """Delete a token by string value."""
     i, token = user.get_token(value)
     if token is None:
         raise HTTPException(404, f"Token with value {value} does not exist")
@@ -100,8 +96,8 @@ async def delete_token(value: str, user: User = Depends(current_user)):
 
 
 @router.post("/{value}/refresh", response_model=Token)
-async def refresh_token(value: str, user: User = Depends(current_user)):
-    """Refreshes token value by string value"""
+async def refresh_token(value: str, user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+    """Refresh token value by string value."""
     i, token = user.get_token(value)
     if token is None:
         raise HTTPException(404, f"Token with value {value} does not exist")
@@ -111,10 +107,10 @@ async def refresh_token(value: str, user: User = Depends(current_user)):
 
 
 @router.get("/{value}/history", response_model=list[TokenUsageOut])
-async def get_token_history(
+async def get_token_history(  # type: ignore[no-untyped-def]
     value: str, days: int = 30, user: User = Depends(current_user)
 ):
-    """Return a token's usage history"""
+    """Return a token's usage history."""
     _, token = user.get_token(value)
     if token is None:
         raise HTTPException(404, f"Token with value {value} does not exist")

@@ -1,8 +1,4 @@
-"""
-Registration router
-"""
-
-# mypy: disable-error-code="no-untyped-def"
+"""Registration router."""
 
 from fastapi import APIRouter, Body, HTTPException, Response
 from pydantic import EmailStr
@@ -19,8 +15,8 @@ embed = Body(..., embed=True)
 
 
 @router.post("", response_model=UserOut)
-async def user_registration(user_auth: UserRegister):
-    """Creates a new user"""
+async def user_registration(user_auth: UserRegister):  # type: ignore[no-untyped-def]
+    """Create a new user."""
     user = await User.by_email(user_auth.email)
     if user is not None:
         raise HTTPException(409, "User with that email already exists")
@@ -34,8 +30,8 @@ async def user_registration(user_auth: UserRegister):
 
 
 @router.post("/forgot-password")
-async def forgot_password(email: EmailStr = embed):
-    """Sends password reset email"""
+async def forgot_password(email: EmailStr = embed) -> Response:
+    """Send password reset email."""
     user = await User.by_email(email)
     if user is None:
         raise HTTPException(404, "No user found with that email")
@@ -49,8 +45,8 @@ async def forgot_password(email: EmailStr = embed):
 
 
 @router.post("/reset-password/{token}", response_model=UserOut)
-async def reset_password(token: str, password: str = embed):
-    """Reset user password from token value"""
+async def reset_password(token: str, password: str = embed):  # type: ignore[no-untyped-def]
+    """Reset user password from token value."""
     user = await user_from_token(token)
     if user is None:
         raise HTTPException(404, "No user found with that email")

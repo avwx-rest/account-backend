@@ -1,6 +1,4 @@
-"""
-Authentication router
-"""
+"""Authentication router."""
 
 from fastapi import APIRouter, HTTPException, Security
 from fastapi_jwt import JwtAuthorizationCredentials
@@ -16,7 +14,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/login")
 async def login(user_auth: UserAuth) -> RefreshToken:
-    """Authenticates and returns the user's JWT"""
+    """Authenticate and return the user's JWT."""
     user = await User.by_email(user_auth.email)
     if user is None or hash_password(user_auth.password) != user.password:
         raise HTTPException(status_code=401, detail="Bad email or password")
@@ -31,6 +29,6 @@ async def login(user_auth: UserAuth) -> RefreshToken:
 async def refresh(
     auth: JwtAuthorizationCredentials = Security(refresh_security)
 ) -> AccessToken:
-    """Returns a new access token from a refresh token"""
+    """Return a new access token from a refresh token."""
     access_token = access_security.create_access_token(subject=auth.subject)
     return AccessToken(access_token=access_token)

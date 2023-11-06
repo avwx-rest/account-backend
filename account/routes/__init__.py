@@ -1,3 +1,5 @@
+"""Account route handlers."""
+
 from account.routes import (
     addon,
     auth,

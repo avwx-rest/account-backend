@@ -1,6 +1,4 @@
-"""
-Server app config
-"""
+"""Server app config."""
 
 from contextlib import asynccontextmanager
 
@@ -31,7 +29,7 @@ It supports:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # type: ignore
-    """Initialize application services"""
+    """Initialize application services."""
     # Init Database
     client = AsyncIOMotorClient(CONFIG.mongo_uri)
     app.db = client[CONFIG.database]  # type: ignore[attr-defined]

@@ -1,6 +1,4 @@
-"""
-FastAPI JWT configuration
-"""
+"""FastAPI JWT configuration."""
 
 from datetime import timedelta
 
@@ -26,11 +24,11 @@ refresh_security = JwtRefreshBearer(
 
 
 async def user_from_credentials(auth: JwtAuthorizationCredentials) -> User | None:
-    """Returns the user associated with auth credentials"""
+    """Return the user associated with auth credentials."""
     return await User.by_email(auth.subject["username"])
 
 
 async def user_from_token(token: str) -> User | None:
-    """Returns the user associated with a token value"""
+    """Return the user associated with a token value."""
     payload = access_security._decode(token)
     return await User.by_email(payload["subject"]["username"])
