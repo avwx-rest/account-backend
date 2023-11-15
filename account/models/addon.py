@@ -12,7 +12,7 @@ class AddonOut(BaseModel):
     key: str
     name: str
     description: str
-    documentation: str | None
+    documentation: str | None = None
 
 
 class UserAddon(AddonOut):
