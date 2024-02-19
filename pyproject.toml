@@ -8,18 +8,18 @@ authors = [
     {name = "Michael duPont", email="michael@dupont.dev"}
 ]
 dependencies = [
-    "bcrypt~=4.0",
-    "beanie~=1.23",
-    "fastapi~=0.104",
-    "fastapi-jwt>=0.2",
-    "fastapi-mail~=1.4",
-    "httpx~=0.25",
-    "kewkew~=0.1",
-    "mailchimp3~=3.0",
-    "python-decouple~=3.8",
-    "rollbar~=0.16",
-    "stripe~=7.3",
-    "uvicorn~=0.24",
+    "bcrypt==4.1.2",
+    "beanie==1.25.0",
+    "fastapi==0.109.2",
+    "fastapi-jwt==0.2.0",
+    "fastapi-mail==1.4.1",
+    "httpx==0.26.0",
+    "kewkew==0.1",
+    "mailchimp3==3.0.21",
+    "python-decouple==3.8",
+    "rollbar==1.0.0",
+    "stripe==8.3.0",
+    "uvicorn==0.27.1",
 ]
 
 [project.optional-dependencies]
