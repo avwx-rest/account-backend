@@ -27,7 +27,7 @@ async def login(user_auth: UserAuth) -> RefreshToken:
 
 @router.post("/refresh")
 async def refresh(
-    auth: JwtAuthorizationCredentials = Security(refresh_security)
+    auth: JwtAuthorizationCredentials = Security(refresh_security),
 ) -> AccessToken:
     """Return a new access token from a refresh token."""
     access_token = access_security.create_access_token(subject=auth.subject)

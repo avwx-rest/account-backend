@@ -39,7 +39,7 @@ async def update_user(update: UserUpdate, user: User = Depends(current_user)):  
 
 @router.delete("")
 async def delete_user(
-    auth: JwtAuthorizationCredentials = Security(access_security)
+    auth: JwtAuthorizationCredentials = Security(access_security),
 ) -> Response:
     """Delete current user."""
     await User.find_one(User.email == auth.subject["username"]).delete()

@@ -17,7 +17,7 @@ router = APIRouter(prefix="/mail", tags=["Mail"])
 
 @router.post("/verify")
 async def request_verification_email(
-    email: EmailStr = Body(..., embed=True)
+    email: EmailStr = Body(..., embed=True),
 ) -> Response:
     """Send the user a verification email."""
     user = await User.by_email(email)

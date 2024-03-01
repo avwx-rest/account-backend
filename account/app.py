@@ -35,10 +35,6 @@ async def lifespan(app: FastAPI):  # type: ignore
     app.db = client[CONFIG.database]  # type: ignore[attr-defined]
     documents = [Addon, Plan, TokenUsage, User]
     await init_beanie(app.db, document_models=documents)  # type: ignore[arg-type,attr-defined]
-    # Init error logging
-    if CONFIG.log_key:
-        rollbar.init(CONFIG.log_key, environment="production", handler="async")
-        app.add_middleware(ReporterMiddleware)
     print("Startup complete")
     yield
     print("Shutdown complete")
@@ -60,7 +56,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Init error logging
+if CONFIG.log_key:
+    rollbar.init(CONFIG.log_key, environment="production", handler="async")
+    app.add_middleware(ReporterMiddleware)
 
+# Add CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
