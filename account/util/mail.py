@@ -11,7 +11,7 @@ mail_conf = ConnectionConfig(
     MAIL_PORT=CONFIG.mail_port,
     MAIL_SERVER=CONFIG.mail_server,
     MAIL_STARTTLS=True,
-    MAIL_SSL_TLS=True,
+    MAIL_SSL_TLS=False,  # StartTLS handles TLS and SSL
     USE_CREDENTIALS=True,
 )
 
@@ -60,15 +60,14 @@ CHANGE_EMAIL_NEW = (
 async def _send(email: str, title: str, msg: str) -> None:
     """Send to email or print to console."""
     if CONFIG.mail_console:
-        print(msg)
-    else:
-        message = MessageSchema(
-            recipients=[email],
-            subject=title,
-            body=msg,
-            subtype=MessageType.plain,
-        )
-        await mail.send_message(message)
+        return print(msg)
+    message = MessageSchema(
+        recipients=[email],
+        subject=title,
+        body=msg,
+        subtype=MessageType.plain,
+    )
+    await mail.send_message(message)
 
 
 async def send_verification_email(email: str, token: str) -> None:
