@@ -2,7 +2,7 @@ name: docker-hub-build-push
 
 on:
   push:
-    branches: [ auth-refresh ]
+    branches: [ main ]
     
   workflow_dispatch:
 
