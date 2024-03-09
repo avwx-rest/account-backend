@@ -18,15 +18,12 @@ PLANS = json.load(DATA.joinpath("plans.json").open())
 
 def make_user(email: str, offset: int | None = 0) -> User:
     """Return a minimal, uncommitted User."""
-    now = None
-    if offset is not None:
-        now = datetime.now(tz=UTC) - timedelta(days=offset)
-    user = User(
+    now = None if offset is None else datetime.now(tz=UTC) - timedelta(days=offset)
+    return User(
         email=email,
         password=hash_password(email),
         email_confirmed_at=now,
     )
-    return user
 
 
 async def add_token_usage(user: User, token: UserToken, days: int = 30) -> None:

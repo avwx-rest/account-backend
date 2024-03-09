@@ -1,5 +1,5 @@
 # Start from the official Python 3.11 container
-FROM python:3.11.5
+FROM python:3.12.2
 
 # Expose the default application port
 EXPOSE 8080

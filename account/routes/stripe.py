@@ -2,7 +2,7 @@
 
 import rollbar
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
-from stripe.error import SignatureVerificationError
+from stripe import SignatureVerificationError
 
 from account.models.user import User, UserOut
 from account.util.current_user import current_user

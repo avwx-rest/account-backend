@@ -57,7 +57,7 @@ async def new_subscription(session: dict) -> bool:
     user.stripe = Stripe(
         customer_id=session["customer"], subscription_id=session["subscription"]
     )
-    item = session["display_items"][0]["plan"]
+    item: dict = session["display_items"][0]["plan"]
     if plan := await Plan.by_stripe_id(item["id"]):
         user.plan = plan
         token = await UserToken.new(type="dev")
@@ -77,18 +77,27 @@ async def change_subscription(user: User, plan: Plan) -> bool:
     sub_id = user.stripe.subscription_id
     if not sub_id or user.plan == plan:
         return False
-    items: list[dict] = []
+    items: list[Subscription.ModifyParamsItem] = []
     sub = Subscription.retrieve(sub_id)
     # Update existing subscription items
-    for item in sub["items"]["data"]:
-        if addon := await Addon.by_product_id(item["price"]["product"]):
+    for item in sub.items.data:
+        addon_id = (
+            item.price.product
+            if isinstance(item.price.product, str)
+            else item.price.product.id
+        )
+        if addon := await Addon.by_product_id(addon_id):
             user_addon = addon.to_user(plan.key)
-            if user_addon.price_id != item["price"]["id"]:
+            if user_addon.price_id != item.price.id:
                 user.replace_addon(user_addon)
-                items.append({"id": item["id"], "price": user_addon.price_id})
-        else:
+                items.append(
+                    Subscription.ModifyParamsItem(id=item.id, price=user_addon.price_id)
+                )
+        elif plan.stripe_id:
             # This updates an existing paid plan
-            items.append({"id": item["id"], "plan": plan.stripe_id})
+            items.append(Subscription.ModifyParamsItem(id=item.id, plan=plan.stripe_id))
+        else:
+            raise ValueError("Unable to find a stripe product ID to modify")
     sub.modify(
         sub_id,
         cancel_at_period_end=False,
@@ -110,7 +119,7 @@ async def cancel_subscription(user: User, keep_addons: bool = False) -> bool:
     if user.stripe.subscription_id:
         if keep_addons and not remove_from_subscription(user, user.plan.stripe_id):
             return False
-        if Subscription.delete(user.stripe.subscription_id)["ended_at"]:  # type: ignore[arg-type]
+        if Subscription.retrieve(user.stripe.subscription_id).delete().ended_at:
             user.stripe.subscription_id = None
             user.addons = []
     user.plan = await Plan.by_key("free")
@@ -121,7 +130,11 @@ async def cancel_subscription(user: User, keep_addons: bool = False) -> bool:
 
 def add_to_subscription(user: User, price_id: str) -> bool:
     """Add an addon to an existing subscription."""
-    if not user.has_subscription or user.stripe is None:
+    if (
+        not user.has_subscription
+        or user.stripe is None
+        or user.stripe.subscription_id is None
+    ):
         return False
     stripe.SubscriptionItem.create(
         subscription=user.stripe.subscription_id, price=price_id
@@ -138,21 +151,20 @@ def remove_from_subscription(user: User, price_id: str | None = None) -> bool:
     ):
         return False
     sub = Subscription.retrieve(user.stripe.subscription_id)
-    for item in sub["items"]["data"]:
-        if item["price"]["id"] == price_id:
-            # If nothing left in subscription
-            if len(sub["items"]["data"]) == 1:
-                if stripe.Subscription.delete(user.stripe.subscription_id)["ended_at"]:  # type: ignore[arg-type]
-                    user.stripe = None
-                    return True
-            else:
-                options = {}
-                if item["plan"]["usage_type"] == "metered":
-                    options["clear_usage"] = True
+    for item in sub.items.data:
+        if item.price.id == price_id:
+            if len(sub.items.data) != 1:
                 return (
-                    stripe.SubscriptionItem.delete(item["id"], **options)["deleted"]
+                    stripe.SubscriptionItem.delete(
+                        item.id, clear_usage=item.plan.usage_type == "metered"
+                    ).deleted
                     is True
                 )
+            # If nothing left in subscription
+            sub = stripe.Subscription.retrieve(user.stripe.subscription_id)
+            if sub.delete().ended_at:
+                user.stripe = None
+                return True
     return False
 
 

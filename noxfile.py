@@ -3,7 +3,7 @@
 import nox
 
 
-@nox.session(python="3.11")
+@nox.session(python="3.12")
 def tests(session: nox.Session) -> None:
     """Run test suite."""
     session.install(".")

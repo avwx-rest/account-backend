@@ -31,7 +31,7 @@ It supports:
 async def lifespan(app: FastAPI):  # type: ignore
     """Initialize application services."""
     # Init Database
-    client = AsyncIOMotorClient(CONFIG.mongo_uri.strip('"'))
+    client = AsyncIOMotorClient(CONFIG.mongo_uri.strip('"'))  # type: ignore[var-annotated]
     app.db = client[CONFIG.database]  # type: ignore[attr-defined]
     documents = [Addon, Plan, TokenUsage, User]
     await init_beanie(app.db, document_models=documents)  # type: ignore[arg-type,attr-defined]
