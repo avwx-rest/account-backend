@@ -1,6 +1,4 @@
-"""
-Notification management tests
-"""
+"""Notification management tests."""
 
 import pytest
 from httpx import AsyncClient
@@ -11,7 +9,7 @@ from tests.util import auth_headers
 
 @pytest.mark.asyncio
 async def test_get_notifications(client: AsyncClient) -> None:
-    """Test notification endpoint returns all user notifications"""
+    """Test notification endpoint returns all user notifications."""
     text = ("Thank you", "Testing")
     email = await add_notification_user(*text)
     auth = await auth_headers(client, email)
@@ -28,7 +26,7 @@ async def test_get_notifications(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_delete_notifications(client: AsyncClient) -> None:
-    """Test deleting all user notifications"""
+    """Test deleting all user notifications."""
     text = ("Thank you", "Testing")
     email = await add_notification_user(*text)
     auth = await auth_headers(client, email)
@@ -44,7 +42,7 @@ async def test_delete_notifications(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_delete_notification(client: AsyncClient) -> None:
-    """Test deleting a single user notifications"""
+    """Test deleting a single user notifications."""
     text = ("Thank you", "Testing")
     email = await add_notification_user(*text)
     auth = await auth_headers(client, email)

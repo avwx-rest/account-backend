@@ -1,6 +1,4 @@
-"""
-Plan router
-"""
+"""Plan router."""
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 
@@ -13,21 +11,25 @@ router = APIRouter(prefix="/plan", tags=["Plan"])
 
 
 @router.get("", response_model=PlanOut)
-async def get_user_plan(user: User = Depends(current_user)):
-    """Returns the current user's plan"""
+async def get_user_plan(user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+    """Return the current user's plan."""
+    if not user.plan:
+        raise HTTPException(404, "User has no plan")
     return user.plan
 
 
 @router.post("")
-async def change_plan(
+async def change_plan(  # type: ignore[no-untyped-def]
     key: str = Body(..., embed=True),
     remove_addons: bool = Body(True, embed=True),
     user: User = Depends(current_user),
 ):
-    """Change the user's current plan. Returns Stripe session if Checkout is required"""
+    """Change the user's current plan. Returns Stripe session if Checkout is required."""
     plan = await Plan.by_key(key)
     if plan is None:
         raise HTTPException(404, f"Plan with key {key} does not exist")
+    if user.plan is None:
+        raise HTTPException(404, "User has no plan")
     if user.plan.key == plan.key:
         raise HTTPException(400, f"User is already subscribed to the {plan.name} plan")
     msg = f"Your {plan.name} plan is now active"
@@ -42,9 +44,10 @@ async def change_plan(
         await user.add_notification("error", "Unable to cancel your subscription")
         raise HTTPException(500, "Unable to cancel your subscription")
     await user.add_notification("success", msg)
+    return None
 
 
 @router.get("/all", response_model=list[PlanOut])
-async def get_plans():
-    """Returns all plans"""
+async def get_plans():  # type: ignore[no-untyped-def]
+    """Return all plans."""
     return await Plan.all().to_list()

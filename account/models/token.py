@@ -1,11 +1,6 @@
-"""
-Token models
-"""
+"""Token models."""
 
-# pylint: disable=too-few-public-methods
-
-from datetime import date, datetime
-from typing import Optional
+from datetime import datetime
 
 from beanie import Document, PydanticObjectId
 from bson.objectid import ObjectId
@@ -15,14 +10,14 @@ from account.models.helpers import ObjectIdStr
 
 
 class TokenUpdate(BaseModel):
-    """Updatable token fields"""
+    """Updatable token fields."""
 
-    name: Optional[str] = None
-    active: Optional[bool] = None
+    name: str | None = None
+    active: bool | None = None
 
 
 class Token(BaseModel):
-    """Token fields returned to the user"""
+    """Token fields returned to the user."""
 
     id: ObjectIdStr = Field(default_factory=ObjectId, alias="_id")
     name: str
@@ -32,28 +27,28 @@ class Token(BaseModel):
 
 
 class TokenUsageOut(BaseModel):
-    """Token usage fields returned to the user"""
+    """Token usage fields returned to the user."""
 
-    count: int
-    date: date
+    usage: int = Field(alias="count")
+    date: datetime
 
 
 class TokenUsage(Document, TokenUsageOut):
-    """Token usage DB representation"""
+    """Token usage DB representation."""
 
     token_id: PydanticObjectId
     user_id: PydanticObjectId
     date: datetime
     updated: datetime
 
-    class Collection:
-        """DB collection name"""
+    class Settings:
+        """DB collection name."""
 
         name = "token"
 
 
 class AllTokenUsageOut(BaseModel):
-    """Token usage including the ID"""
+    """Token usage including the ID."""
 
     token_id: PydanticObjectId
     days: list[TokenUsageOut]

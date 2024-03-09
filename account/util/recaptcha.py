@@ -1,6 +1,4 @@
-"""
-reCaptcha verification
-"""
+"""reCaptcha verification."""
 
 from httpx import AsyncClient
 from account.config import CONFIG
@@ -12,7 +10,7 @@ URL = "https://www.google.com/recaptcha/api/siteverify"
 
 
 async def verify(token: str) -> bool:
-    """Call reCaptcha service to verify data token"""
+    """Call reCaptcha service to verify data token."""
     if CONFIG.testing:
         return True
     async with AsyncClient(timeout=10) as client:

@@ -1,29 +1,27 @@
-"""
-Update a user's plan information
-"""
+"""Update a user's plan information."""
 
 # stdlib
 import sys
 import asyncio as aio
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.absolute()))
-
 # library
 import typer
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 
+sys.path.insert(0, str(Path(__file__).parent.parent.absolute()))
+
 # module
-from account.config import CONFIG
-from account.models.addon import Addon
-from account.models.plan import Plan
-from account.models.user import User
-from account.util.stripe import change_subscription, cancel_subscription
+from account.config import CONFIG  # noqa: E402
+from account.models.addon import Addon  # noqa: E402
+from account.models.plan import Plan  # noqa: E402
+from account.models.user import User  # noqa: E402
+from account.util.stripe import change_subscription, cancel_subscription  # noqa: E402
 
 
 async def _change_plan(user: User, plan: Plan, remove_addons: bool) -> int:
-    if user.plan.key == plan.key:
+    if user.plan and user.plan.key == plan.key:
         print(f"User is already subscribed to the {plan.name} plan")
         return 2
     if plan.stripe_id:
@@ -40,8 +38,9 @@ async def _change_plan(user: User, plan: Plan, remove_addons: bool) -> int:
 
 
 async def main(email: str, plan: str, remove_addons: bool) -> int:
+    """Update a user's plan information."""
     db = AsyncIOMotorClient(CONFIG.mongo_uri).account
-    await init_beanie(db, document_models=[Addon, Plan, User])
+    await init_beanie(db, document_models=[Addon, Plan, User])  # type: ignore[arg-type]
 
     user = await User.by_email(email)
     if not user:
@@ -57,8 +56,8 @@ async def main(email: str, plan: str, remove_addons: bool) -> int:
 
 
 def change_plan(email: str, plan: str, remove_addons: bool = True) -> int:
-    """Change a user's plan details"""
-    aio.run(main(email, plan, remove_addons))
+    """Change a user's plan details."""
+    return aio.run(main(email, plan, remove_addons))
 
 
 if __name__ == "__main__":

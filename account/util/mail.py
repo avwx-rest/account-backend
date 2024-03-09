@@ -1,8 +1,6 @@
-"""
-Mail server config
-"""
+"""Mail server config."""
 
-from fastapi_mail import FastMail, ConnectionConfig, MessageSchema
+from fastapi_mail import FastMail, ConnectionConfig, MessageSchema, MessageType
 
 from account.config import CONFIG
 
@@ -12,8 +10,8 @@ mail_conf = ConnectionConfig(
     MAIL_FROM=CONFIG.mail_sender,
     MAIL_PORT=CONFIG.mail_port,
     MAIL_SERVER=CONFIG.mail_server,
-    MAIL_TLS=True,
-    MAIL_SSL=False,
+    MAIL_STARTTLS=True,
+    MAIL_SSL_TLS=False,  # StartTLS handles TLS and SSL
     USE_CREDENTIALS=True,
 )
 
@@ -54,31 +52,33 @@ Your account has been disabled after two failed attempts, and your account token
 ACCOUNT_ENABLE = "Just letting you know that your account has been re-enabled and your API tokens activated. No further action is required."
 
 CHANGE_EMAIL_OLD = "Your AVWX account email has been changed to {}. If you did not make this change, please contact avwx@dupont.dev immediately."
-CHANGE_EMAIL_NEW = "Your AVWX account email has been changed. No further action is needed."
+CHANGE_EMAIL_NEW = (
+    "Your AVWX account email has been changed. No further action is needed."
+)
 
 
 async def _send(email: str, title: str, msg: str) -> None:
-    """Send to email or print to console"""
+    """Send to email or print to console."""
     if CONFIG.mail_console:
-        print(msg)
-    else:
-        message = MessageSchema(
-            recipients=[email],
-            subject=title,
-            body=msg,
-        )
-        await mail.send_message(message)
+        return print(msg)
+    message = MessageSchema(
+        recipients=[email],
+        subject=title,
+        body=msg,
+        subtype=MessageType.plain,
+    )
+    await mail.send_message(message)
 
 
 async def send_verification_email(email: str, token: str) -> None:
-    """Send user verification email"""
+    """Send user verification email."""
     # Change this later to public endpoint
     url = f"{CONFIG.root_url}/verify-email?t={token}"
     await _send(email, "AVWX Email Verification", VERIFY_TEMPLATE.format(url))
 
 
 async def send_password_reset_email(email: str, token: str) -> None:
-    """Sends password reset email"""
+    """Send password reset email."""
     # Change this later to public endpoint
     url = f"{CONFIG.root_url}/forgot-password?t={token}"
     await _send(email, "AVWX Password Reset", RESET_TEMPLATE.format(url))
@@ -87,7 +87,7 @@ async def send_password_reset_email(email: str, token: str) -> None:
 async def send_disable_email(
     email: str, portal_url: str, warning: bool = False
 ) -> None:
-    """Sends missed payment email with portal link"""
+    """Send missed payment email with portal link."""
     title = "AVWX Account "
     if warning:
         title += "Payment"
@@ -99,12 +99,12 @@ async def send_disable_email(
 
 
 async def send_enabled_email(email: str) -> None:
-    """Sends account re-enabled status email"""
+    """Send account re-enabled status email."""
     await _send(email, "AVWX Account Re-Enabled", ACCOUNT_ENABLE)
 
 
 async def send_email_change(old: str, new: str) -> None:
-    """Sends email chnage to old and new address"""
+    """Send email chnage to old and new address."""
     title = "AVWX Change Passord"
     await _send(old, title, CHANGE_EMAIL_OLD.format(new))
     await _send(new, title, CHANGE_EMAIL_NEW)

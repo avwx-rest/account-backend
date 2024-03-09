@@ -1,3 +1,0 @@
-asgi-lifespan~=1.0
-httpx~=0.23
-pytest-asyncio~=0.18
