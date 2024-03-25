@@ -1,7 +1,7 @@
 """Stripe subscription utilities."""
 
 import stripe
-from stripe import Event, Subscription, Webhook
+from stripe import Event, Invoice, Price, Subscription, Webhook
 
 from account.config import CONFIG
 from account.models.addon import Addon
@@ -11,29 +11,40 @@ from account.util import mail
 
 
 stripe.api_key = CONFIG.stripe_secret_key
-
-_SESSION = {
-    "payment_method_types": ["card"],
-    "success_url": f"{CONFIG.root_url}/stripe/success",
-    "cancel_url": f"{CONFIG.root_url}/stripe/cancel",
-}
+_SUCCESS_URL = f"{CONFIG.root_url}/stripe/success"
+_CANCEL_URL = f"{CONFIG.root_url}/stripe/cancel"
 
 
-def get_session(user: User, price_id: str) -> stripe.checkout.Session:
+def get_session(
+    user: User, price_id: str, metered: bool = False
+) -> stripe.checkout.Session:
     """Create a Stripe Session object to start a Checkout."""
-    params = {
-        "client_reference_id": user.id,
-        "subscription_data": {"items": [{"plan": price_id}]},
-        **_SESSION,
-    }
-    if user.stripe:
-        params["customer"] = user.stripe.customer_id
+    if metered:
+        item = stripe.checkout.Session.CreateParamsLineItem(price=price_id)
     else:
-        params["customer_email"] = user.email
-    return stripe.checkout.Session.create(**params)  # type: ignore[arg-type]
+        item = stripe.checkout.Session.CreateParamsLineItem(price=price_id, quantity=1)
+    if user.stripe:
+        return stripe.checkout.Session.create(
+            customer=user.stripe.customer_id,
+            client_reference_id=str(user.id),
+            mode="subscription",
+            line_items=[item],
+            payment_method_types=["card"],
+            success_url=_SUCCESS_URL,
+            cancel_url=_CANCEL_URL,
+        )
+    return stripe.checkout.Session.create(
+        customer_email=user.email,
+        client_reference_id=str(user.id),
+        mode="subscription",
+        line_items=[item],
+        payment_method_types=["card"],
+        success_url=_SUCCESS_URL,
+        cancel_url=_CANCEL_URL,
+    )
 
 
-def get_event(payload: dict, sig: str) -> Event:
+def get_event(payload: str, sig: str) -> Event:
     """Validate a Stripe event to weed out hacked calls."""
     event: Event = Webhook.construct_event(payload, sig, CONFIG.stripe_sign_secret)
     return event
@@ -49,20 +60,39 @@ def get_portal_session(user: User) -> stripe.billing_portal.Session:
     )
 
 
-async def new_subscription(session: dict) -> bool:
+def get_subscription(session: stripe.checkout.Session) -> Subscription:
+    """Load Stripe subscription from checkout session."""
+    if not session.subscription:
+        raise ValueError("No subscription found after checkout session.")
+    if isinstance(session.subscription, Subscription):
+        return session.subscription
+    return Subscription.retrieve(session.subscription)
+
+
+def get_customer_id(session: stripe.checkout.Session | Invoice) -> str:
+    """Load customer ID from Stripe objects."""
+    if not session.customer:
+        raise ValueError("No customer ID found after checkout session.")
+    return (
+        session.customer if isinstance(session.customer, str) else session.customer.id
+    )
+
+
+async def new_subscription(session: stripe.checkout.Session) -> bool:
     """Create a new subscription for a validated Checkout Session."""
     user = await User.from_stripe_session(session)
     if user is None or user.plan is None:
         return False
-    user.stripe = Stripe(
-        customer_id=session["customer"], subscription_id=session["subscription"]
-    )
-    item: dict = session["display_items"][0]["plan"]
-    if plan := await Plan.by_stripe_id(item["id"]):
+    sub = get_subscription(session)
+    user.stripe = Stripe(customer_id=get_customer_id(session), subscription_id=sub.id)
+    price: Price = sub["items"].data[0].price
+    if plan := await Plan.by_stripe_id(price.id):
         user.plan = plan
         token = await UserToken.new(type="dev")
         user.tokens.append(token)
-    elif addon := await Addon.by_product_id(item["product"]):
+    elif addon := await Addon.by_product_id(
+        price.product if isinstance(price.product, str) else price.product.id
+    ):
         user.addons.append(addon.to_user(user.plan.key))
     else:
         return False
@@ -80,7 +110,7 @@ async def change_subscription(user: User, plan: Plan) -> bool:
     items: list[Subscription.ModifyParamsItem] = []
     sub = Subscription.retrieve(sub_id)
     # Update existing subscription items
-    for item in sub.items.data:
+    for item in sub["items"].data:
         addon_id = (
             item.price.product
             if isinstance(item.price.product, str)
@@ -151,9 +181,9 @@ def remove_from_subscription(user: User, price_id: str | None = None) -> bool:
     ):
         return False
     sub = Subscription.retrieve(user.stripe.subscription_id)
-    for item in sub.items.data:
+    for item in sub["items"].data:
         if item.price.id == price_id:
-            if len(sub.items.data) != 1:
+            if len(sub["items"].data) != 1:
                 return (
                     stripe.SubscriptionItem.delete(
                         item.id, clear_usage=item.plan.usage_type == "metered"
@@ -176,9 +206,9 @@ def update_email(user: User, new_email: str) -> bool:
     return True
 
 
-async def invoice_paid(invoice: dict) -> bool:
+async def invoice_paid(invoice: Invoice) -> bool:
     """Re-enable a user account after invoice payment."""
-    user = await User.by_customer_id(invoice["customer"])
+    user = await User.by_customer_id(get_customer_id(invoice))
     if user is None:
         return False
     if user.disabled:
@@ -188,18 +218,15 @@ async def invoice_paid(invoice: dict) -> bool:
     return True
 
 
-async def invoice_failed(invoice: dict) -> bool:
+async def invoice_failed(invoice: Invoice) -> bool:
     """Disable user account if two or more failed invoices."""
-    if invoice["paid"]:
+    if invoice.paid or invoice.attempt_count < 1:
         return True
-    attempts = invoice["attempt_count"]
-    if attempts < 1:
-        return True
-    user = await User.by_customer_id(invoice["customer"])
+    user = await User.by_customer_id(get_customer_id(invoice))
     if user is None:
         return False
     url = get_portal_session(user).url
-    if attempts == 1:
+    if invoice.attempt_count == 1:
         await mail.send_disable_email(user.email, url, warning=True)
         return True
     user.disabled = True

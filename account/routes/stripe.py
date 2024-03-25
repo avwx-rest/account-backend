@@ -56,17 +56,15 @@ async def stripe_fulfill(
     request: Request, stripe_signature: str = Header(None)
 ) -> Response:
     """Stripe event handler."""
-    data = await request.json()
     try:
-        event = get_event(data, stripe_signature)
+        event = get_event(await request.body(), stripe_signature)  # type: ignore
     except (ValueError, SignatureVerificationError) as exc:
         raise HTTPException(400) from exc
-    event_type = event["type"]
-    if handler := _EVENTS.get(event_type):
-        if await handler(event["data"]["object"]):
+    if handler := _EVENTS.get(event.type):
+        if await handler(event.data.object):  # type: ignore
             return Response()
     else:
-        print(f"Unhandled event type {event_type}")
+        print(f"Unhandled event type {event.type}")
         rollbar.report_message(event)
     raise HTTPException(400)
 

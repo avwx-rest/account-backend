@@ -34,7 +34,7 @@ async def new_addon(  # type: ignore[no-untyped-def]
         raise ValueError("Cannot add addon to user with no plan")
     user_addon = addon.to_user(user.plan.key)
     if not user.has_subscription:
-        return get_session(user, user_addon.price_id)
+        return get_session(user, user_addon.price_id, metered=addon.metered)
     if not add_to_subscription(user, user_addon.price_id):
         raise HTTPException(500, "Unable to add addon to user subscription")
     user.addons.append(user_addon)

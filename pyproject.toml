@@ -18,15 +18,15 @@ dependencies = [
     "mailchimp3==3.0.21",
     "python-decouple==3.8",
     "rollbar==1.0.0",
-    "stripe==8.6.0",
-    "uvicorn==0.28.0",
+    "stripe==8.8.0",
+    "uvicorn==0.29.0",
 ]
 
 [project.optional-dependencies]
 dev = ["mypy", "ruff"]
 test = [
     "asgi-lifespan~=2.1",
-    "pytest-asyncio~=0.21",
+    "pytest-asyncio~=0.23",
 ]
 
 [project.urls]

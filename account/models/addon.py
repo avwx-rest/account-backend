@@ -1,6 +1,6 @@
 """Plan add-on models."""
 
-from typing import Optional
+from typing import Self
 
 from beanie import Document
 from pydantic import BaseModel
@@ -12,6 +12,7 @@ class AddonOut(BaseModel):
     key: str
     name: str
     description: str
+    metered: bool
     documentation: str | None = None
 
 
@@ -33,12 +34,12 @@ class Addon(Document, AddonOut):
         name = "addon"
 
     @classmethod
-    async def by_key(cls, key: str) -> Optional["Addon"]:
+    async def by_key(cls, key: str) -> Self | None:
         """Get an add-on by internal key."""
         return await cls.find_one(cls.key == key)
 
     @classmethod
-    async def by_product_id(cls, key: str) -> Optional["Addon"]:
+    async def by_product_id(cls, key: str) -> Self | None:
         """Get an add-on by Stripe product ID."""
         return await cls.find_one(cls.product_id == key)
 
@@ -54,6 +55,7 @@ class Addon(Document, AddonOut):
             key=self.key,
             name=self.name,
             description=self.description,
+            metered=self.metered,
             documentation=self.documentation,
             price_id=price,
         )

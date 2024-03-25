@@ -2,11 +2,12 @@
 
 from datetime import datetime, UTC
 from secrets import token_urlsafe
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any, Self
 
 from beanie import Document, Indexed
 from bson.objectid import ObjectId
 from pydantic import BaseModel, EmailStr, Field
+from stripe.checkout import Session
 
 from account.models.addon import AddonOut, UserAddon
 from account.models.helpers import ObjectIdStr
@@ -149,19 +150,19 @@ class User(Document, UserOut):
         return {"username": self.email}
 
     @classmethod
-    async def by_email(cls, email: str) -> Optional["User"]:
+    async def by_email(cls, email: str) -> Self | None:
         """Get a user by email."""
         return await cls.find_one(cls.email == email)
 
     @classmethod
-    async def by_customer_id(cls, id: str) -> Optional["User"]:
+    async def by_customer_id(cls, id: str) -> Self | None:
         """Get a user by Stripe customer ID."""
         return await cls.find_one(cls.stripe.customer_id == id)  # type: ignore
 
     @classmethod
-    async def from_stripe_session(cls, session: dict) -> Optional["User"]:
+    async def from_stripe_session(cls, session: Session) -> Self | None:
         """Get a user from a Stripe event session."""
-        return await User.get(ObjectId(session["client_reference_id"]))
+        return await User.get(ObjectId(session.client_reference_id))
 
     async def add_default_documents(self) -> None:
         """Add initial embedded documents."""

@@ -1,6 +1,6 @@
 """Pricing plan models."""
 
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any, Self
 
 from beanie import Document, Indexed
 from pydantic import BaseModel
@@ -66,11 +66,11 @@ class Plan(Document, PlanOut):
         name = "plan"
 
     @classmethod
-    async def by_key(cls, key: str) -> Optional["Plan"]:
+    async def by_key(cls, key: str) -> Self | None:
         """Get a plan by key."""
         return await cls.find_one(cls.key == key)
 
     @classmethod
-    async def by_stripe_id(cls, id: str) -> Optional["Plan"]:
+    async def by_stripe_id(cls, id: str) -> Self | None:
         """Get a plan by Stripe product ID."""
         return await cls.find_one(cls.stripe_id == id)
