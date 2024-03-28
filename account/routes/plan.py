@@ -11,7 +11,7 @@ router = APIRouter(prefix="/plan", tags=["Plan"])
 
 
 @router.get("", response_model=PlanOut)
-async def get_user_plan(user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+async def get_user_plan(user: User = Depends(current_user)) -> Plan:
     """Return the current user's plan."""
     if not user.plan:
         raise HTTPException(404, "User has no plan")
@@ -48,6 +48,6 @@ async def change_plan(  # type: ignore[no-untyped-def]
 
 
 @router.get("/all", response_model=list[PlanOut])
-async def get_plans():  # type: ignore[no-untyped-def]
+async def get_plans() -> list[Plan]:
     """Return all plans."""
     return await Plan.all().to_list()

@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 
-from account.models.addon import Addon, AddonOut
+from account.models.addon import Addon, AddonOut, UserAddon
 from account.models.user import User
 from account.util.current_user import current_user
 from account.util.stripe import (
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/addon", tags=["Addon"])
 
 
 @router.get("", response_model=list[AddonOut])
-async def get_user_addons(user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+async def get_user_addons(user: User = Depends(current_user)) -> list[UserAddon]:
     """Return the current user's addons."""
     return user.addons
 
@@ -63,6 +63,6 @@ async def delete_addon(key: str, user: User = Depends(current_user)) -> Response
 
 
 @router.get("/all", response_model=list[AddonOut])
-async def get_addons():  # type: ignore[no-untyped-def]
+async def get_addons() -> list[Addon]:
     """Return all addons."""
     return await Addon.all().to_list()

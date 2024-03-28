@@ -19,7 +19,7 @@ router = APIRouter(prefix="/stripe", tags=["Stripe"])
 
 
 @router.get("/success", response_model=UserOut)
-async def stripe_success(user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+async def stripe_success(user: User = Depends(current_user)) -> User:
     """Add success notification after sign-up."""
     await user.add_notification(
         "success", "Your sign-up was successful. Thank you for supporting AVWX!"
@@ -28,7 +28,7 @@ async def stripe_success(user: User = Depends(current_user)):  # type: ignore[no
 
 
 @router.get("/cancel", response_model=UserOut)
-async def stripe_cancel(user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+async def stripe_cancel(user: User = Depends(current_user)) -> User:
     """Add cancelled notification after sign-up."""
     await user.add_notification(
         "info", "It looks like you cancelled sign-up. No changes have been made"

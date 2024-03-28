@@ -12,7 +12,6 @@ class AddonOut(BaseModel):
     key: str
     name: str
     description: str
-    metered: bool
     documentation: str | None = None
 
 
@@ -27,6 +26,7 @@ class Addon(Document, AddonOut):
 
     product_id: str
     price_ids: dict[str, str]
+    metered: bool
 
     class Settings:
         """DB collection name."""
@@ -55,7 +55,6 @@ class Addon(Document, AddonOut):
             key=self.key,
             name=self.name,
             description=self.description,
-            metered=self.metered,
             documentation=self.documentation,
             price_id=price,
         )

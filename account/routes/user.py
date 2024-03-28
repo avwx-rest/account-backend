@@ -14,13 +14,13 @@ router = APIRouter(prefix="/user", tags=["User"])
 
 
 @router.get("", response_model=UserOut)
-async def get_user(user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+async def get_user(user: User = Depends(current_user)) -> User:
     """Return the current user."""
     return user
 
 
 @router.patch("", response_model=UserOut)
-async def update_user(update: UserUpdate, user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+async def update_user(update: UserUpdate, user: User = Depends(current_user)) -> User:
     """Update allowed user fields."""
     fields = update.model_dump(exclude_unset=True)
     if new_email := fields.pop("email", None):

@@ -1,6 +1,7 @@
 """Token management router."""
 
 from datetime import datetime, timedelta, UTC
+from typing import Any
 
 from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -19,13 +20,13 @@ router = APIRouter(prefix="/token", tags=["Token"])
 
 
 @router.get("", response_model=list[Token])
-async def get_user_tokens(user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+async def get_user_tokens(user: User = Depends(current_user)) -> list[UserToken]:
     """Return the current user's tokens."""
     return user.tokens
 
 
 @router.post("", response_model=Token)
-async def new_token(user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+async def new_token(user: User = Depends(current_user)) -> UserToken:
     """Create a new user token."""
     token = await UserToken.new()
     user.tokens.append(token)
@@ -34,7 +35,9 @@ async def new_token(user: User = Depends(current_user)):  # type: ignore[no-unty
 
 
 @router.get("/history", response_model=list[AllTokenUsageOut])
-async def get_all_history(days: int = 30, user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+async def get_all_history(
+    days: int = 30, user: User = Depends(current_user)
+) -> list[dict[str, Any]]:
     """Return all recent token history."""
     days_since = datetime.now(tz=UTC) - timedelta(days=days)
     data = (
@@ -62,7 +65,7 @@ async def get_all_history(days: int = 30, user: User = Depends(current_user)):  
 
 
 @router.get("/{value}", response_model=Token)
-async def get_token(value: str, user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+async def get_token(value: str, user: User = Depends(current_user)) -> UserToken:
     """Return token details by string value."""
     _, token = user.get_token(value)
     if token is None:
@@ -71,9 +74,9 @@ async def get_token(value: str, user: User = Depends(current_user)):  # type: ig
 
 
 @router.patch("/{value}", response_model=Token)
-async def update_token(  # type: ignore[no-untyped-def]
+async def update_token(
     value: str, update: TokenUpdate, user: User = Depends(current_user)
-):
+) -> UserToken:
     """Update token details by string value."""
     i, token = user.get_token(value)
     if token is None:
@@ -96,7 +99,7 @@ async def delete_token(value: str, user: User = Depends(current_user)) -> Respon
 
 
 @router.post("/{value}/refresh", response_model=Token)
-async def refresh_token(value: str, user: User = Depends(current_user)):  # type: ignore[no-untyped-def]
+async def refresh_token(value: str, user: User = Depends(current_user)) -> UserToken:
     """Refresh token value by string value."""
     i, token = user.get_token(value)
     if token is None:
@@ -107,9 +110,9 @@ async def refresh_token(value: str, user: User = Depends(current_user)):  # type
 
 
 @router.get("/{value}/history", response_model=list[TokenUsageOut])
-async def get_token_history(  # type: ignore[no-untyped-def]
+async def get_token_history(
     value: str, days: int = 30, user: User = Depends(current_user)
-):
+) -> list[TokenUsage]:
     """Return a token's usage history."""
     _, token = user.get_token(value)
     if token is None:

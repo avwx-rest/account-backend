@@ -11,11 +11,9 @@ from account.util.recaptcha import verify
 
 router = APIRouter(prefix="/register", tags=["Register"])
 
-embed = Body(..., embed=True)
-
 
 @router.post("", response_model=UserOut)
-async def user_registration(user_auth: UserRegister):  # type: ignore[no-untyped-def]
+async def user_registration(user_auth: UserRegister) -> User:
     """Create a new user."""
     user = await User.by_email(user_auth.email)
     if user is not None:
@@ -30,7 +28,7 @@ async def user_registration(user_auth: UserRegister):  # type: ignore[no-untyped
 
 
 @router.post("/forgot-password")
-async def forgot_password(email: EmailStr = embed) -> Response:
+async def forgot_password(email: EmailStr = Body(..., embed=True)) -> Response:
     """Send password reset email."""
     user = await User.by_email(email)
     if user is None:
@@ -45,7 +43,7 @@ async def forgot_password(email: EmailStr = embed) -> Response:
 
 
 @router.post("/reset-password/{token}", response_model=UserOut)
-async def reset_password(token: str, password: str = embed):  # type: ignore[no-untyped-def]
+async def reset_password(token: str, password: str = Body(..., embed=True)) -> User:
     """Reset user password from token value."""
     user = await user_from_token(token)
     if user is None:
