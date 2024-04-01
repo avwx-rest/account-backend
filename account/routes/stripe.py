@@ -72,7 +72,7 @@ async def stripe_fulfill(
 @router.get("/portal")
 async def customer_portal(user: User = Depends(current_user)) -> dict[str, str] | None:
     """Return the user's Stripe account portal URL."""
-    if not user.stripe or user.stripe.customer_id:
+    if not (user.stripe and user.stripe.customer_id):
         return None
     session = get_portal_session(user)
     return {"url": session.url}
