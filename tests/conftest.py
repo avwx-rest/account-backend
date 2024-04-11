@@ -6,7 +6,7 @@ import pytest_asyncio
 from asgi_lifespan import LifespanManager
 from decouple import config
 from fastapi import FastAPI
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 
 from account.config import CONFIG
 
@@ -29,7 +29,9 @@ async def clear_database(server: FastAPI) -> None:
 async def client() -> AsyncIterator[AsyncClient]:
     """Async server client that handles lifespan and teardown."""
     async with LifespanManager(app):
-        async with AsyncClient(app=app, base_url="http://test") as _client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as _client:
             try:
                 yield _client
             except Exception as exc:

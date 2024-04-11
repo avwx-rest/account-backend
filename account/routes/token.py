@@ -1,7 +1,6 @@
 """Token management router."""
 
 from datetime import datetime, timedelta, UTC
-from typing import Any
 
 from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -15,6 +14,7 @@ from account.models.token import (
 )
 from account.models.user import User, UserToken
 from account.util.current_user import current_user
+from account.util.token import token_usage_for
 
 router = APIRouter(prefix="/token", tags=["Token"])
 
@@ -34,34 +34,12 @@ async def new_token(user: User = Depends(current_user)) -> UserToken:
     return token
 
 
-@router.get("/history", response_model=list[AllTokenUsageOut])
+@router.get("/history")
 async def get_all_history(
     days: int = 30, user: User = Depends(current_user)
-) -> list[dict[str, Any]]:
+) -> list[AllTokenUsageOut]:
     """Return all recent token history."""
-    days_since = datetime.now(tz=UTC) - timedelta(days=days)
-    data = (
-        await TokenUsage.find(
-            TokenUsage.user_id == ObjectId(user.id),
-            TokenUsage.date >= days_since,
-        )
-        .aggregate(
-            [
-                {"$project": {"_id": 0, "date": 1, "count": 1, "token_id": 1}},
-                {
-                    "$group": {
-                        "_id": "$token_id",
-                        "days": {"$push": {"date": "$date", "count": "$count"}},
-                    }
-                },
-            ]
-        )
-        .to_list()
-    )
-    for i, item in enumerate(data):
-        data[i]["token_id"] = item["_id"]
-        del data[i]["_id"]
-    return data
+    return await token_usage_for(user, days)
 
 
 @router.get("/{value}", response_model=Token)
@@ -81,7 +59,7 @@ async def update_token(
     i, token = user.get_token(value)
     if token is None:
         raise HTTPException(404, f"Token with value {value} does not exist")
-    token = token.copy(update=update.dict(exclude_unset=True))
+    token = token.model_copy(update=update.model_dump(exclude_unset=True))
     user.tokens[i] = token
     await user.save()
     return token

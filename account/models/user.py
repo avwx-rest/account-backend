@@ -104,6 +104,7 @@ class UserOut(UserUpdate):
     allow_overage: bool = False
     subscribed: bool = False
     disabled: bool = False
+    is_admin: bool = False
 
 
 class User(Document, UserOut):

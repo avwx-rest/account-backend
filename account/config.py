@@ -40,6 +40,7 @@ class Settings(BaseModel):
     # reCaptcha
     recaptcha_secret_key: str = config("RECAPTCHA_SECRET_KEY", default="")
 
+    admin_root: str = config("ADMIN_ROOT", default="")
     testing: bool = config("TESTING", default=False, cast=bool)
 
 

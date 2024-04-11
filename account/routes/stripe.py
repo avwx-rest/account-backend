@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from stripe import SignatureVerificationError
 
 from account.models.user import User, UserOut
+from account.models.util import JustUrl
 from account.util.current_user import current_user
 from account.util.stripe import (
     get_event,
@@ -70,9 +71,9 @@ async def stripe_fulfill(
 
 
 @router.get("/portal")
-async def customer_portal(user: User = Depends(current_user)) -> dict[str, str] | None:
+async def customer_portal(user: User = Depends(current_user)) -> JustUrl:
     """Return the user's Stripe account portal URL."""
     if not (user.stripe and user.stripe.customer_id):
-        return None
+        raise HTTPException(400, "No stripe fields available")
     session = get_portal_session(user)
-    return {"url": session.url}
+    return JustUrl(url=session.url)
