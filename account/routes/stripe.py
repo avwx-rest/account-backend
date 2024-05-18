@@ -58,11 +58,11 @@ async def stripe_fulfill(
 ) -> Response:
     """Stripe event handler."""
     try:
-        event = get_event(await request.body(), stripe_signature)  # type: ignore
+        event = get_event(await request.body(), stripe_signature)
     except (ValueError, SignatureVerificationError) as exc:
         raise HTTPException(400) from exc
     if handler := _EVENTS.get(event.type):
-        if await handler(event.data.object):  # type: ignore
+        if await handler(event.data.object):
             return Response()
     else:
         print(f"Unhandled event type {event.type}")

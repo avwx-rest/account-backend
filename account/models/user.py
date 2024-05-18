@@ -48,7 +48,7 @@ class UserToken(Token):
     @classmethod
     async def new(cls, name: str = "Token", type: str = "app") -> "UserToken":
         """Generate a new unique token."""
-        token = cls(_id=ObjectId(), name=name, type=type, value="")  # type: ignore[arg-type]
+        token = cls(_id=ObjectId(), name=name, type=type, value="")
         await token.refresh()
         return token
 

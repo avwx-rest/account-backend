@@ -2,6 +2,7 @@
 
 from contextlib import asynccontextmanager
 
+import logfire
 import rollbar
 from rollbar.contrib.fastapi import ReporterMiddleware
 from fastapi import FastAPI
@@ -28,13 +29,14 @@ It supports:
 
 
 @asynccontextmanager
+@logfire.no_auto_trace
 async def lifespan(app: FastAPI):  # type: ignore
     """Initialize application services."""
     # Init Database
-    client = AsyncIOMotorClient(CONFIG.mongo_uri.strip('"'))  # type: ignore[var-annotated]
-    app.db = client[CONFIG.database]  # type: ignore[attr-defined]
+    client = AsyncIOMotorClient(CONFIG.mongo_uri.strip('"'))
+    app.db = client[CONFIG.database]
     documents = [Addon, Plan, TokenUsage, User]
-    await init_beanie(app.db, document_models=documents)  # type: ignore[arg-type,attr-defined]
+    await init_beanie(app.db, document_models=documents)
     print("Startup complete")
     yield
     print("Shutdown complete")
