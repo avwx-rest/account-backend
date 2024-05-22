@@ -62,7 +62,7 @@ async def stripe_fulfill(
     except (ValueError, SignatureVerificationError) as exc:
         raise HTTPException(400) from exc
     if handler := _EVENTS.get(event.type):
-        if await handler(event.data.object):
+        if await handler(event.data.object):  # type: ignore
             return Response()
     else:
         print(f"Unhandled event type {event.type}")

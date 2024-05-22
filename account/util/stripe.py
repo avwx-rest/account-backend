@@ -44,7 +44,7 @@ def get_session(
     )
 
 
-def get_event(payload: str, sig: str) -> Event:
+def get_event(payload: str | bytes, sig: str) -> Event:
     """Validate a Stripe event to weed out hacked calls."""
     event: Event = Webhook.construct_event(payload, sig, CONFIG.stripe_sign_secret)
     return event

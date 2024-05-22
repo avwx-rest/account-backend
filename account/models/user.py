@@ -6,6 +6,7 @@ from typing import Annotated, Any, Self
 
 from beanie import Document, Indexed
 from bson.objectid import ObjectId
+from fastapi import HTTPException
 from pydantic import BaseModel, EmailStr, Field
 from stripe.checkout import Session
 
@@ -48,7 +49,7 @@ class UserToken(Token):
     @classmethod
     async def new(cls, name: str = "Token", type: str = "app") -> "UserToken":
         """Generate a new unique token."""
-        token = cls(_id=ObjectId(), name=name, type=type, value="")
+        token = cls(_id=ObjectId(), name=name, type=type, value="")  # type: ignore[arg-type]
         await token.refresh()
         return token
 
@@ -141,9 +142,7 @@ class User(Document, UserOut):
     @property
     def has_subscription(self) -> bool:
         """Return True if the user has a Stripe subscript ID."""
-        if self.stripe:
-            return isinstance(self.stripe.subscription_id, str)
-        return False
+        return isinstance(self.stripe.subscription_id, str) if self.stripe else False
 
     @property
     def jwt_subject(self) -> dict[str, Any]:
@@ -171,17 +170,25 @@ class User(Document, UserOut):
 
     def get_token(self, value: str) -> tuple[int, UserToken | None]:
         """Return a token and index by its id."""
-        for i, token in enumerate(self.tokens):
-            if str(token.id) == value:
-                return i, token
-        return -1, None
+        return next(
+            (
+                (i, token)
+                for i, token in enumerate(self.tokens)
+                if str(token.id) == value
+            ),
+            (-1, None),
+        )
 
     def get_notification(self, value: str) -> tuple[int, Notification | None]:
         """Return a notification and index by its string value."""
-        for i, notification in enumerate(self.notifications):
-            if notification.id == value:
-                return i, notification
-        return -1, None
+        return next(
+            (
+                (i, notification)
+                for i, notification in enumerate(self.notifications)
+                if notification.id == value
+            ),
+            (-1, None),
+        )
 
     async def add_notification(self, type: str, text: str) -> None:
         """Add a new notification to the user's list."""
@@ -203,3 +210,11 @@ class User(Document, UserOut):
             self.old_emails = []
         self.old_emails.append(self.email)
         self.email = new_email
+
+    def validate_email(self) -> None:
+        """Confirm the user's email address."""
+        if self.email_confirmed_at is not None:
+            raise HTTPException(400, "Email is already verified")
+        if self.disabled:
+            raise HTTPException(400, "Your account is disabled")
+        self.email_confirmed_at = datetime.now(tz=UTC)

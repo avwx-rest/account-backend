@@ -1,7 +1,5 @@
 """Email router."""
 
-from datetime import datetime, UTC
-
 from fastapi import APIRouter, Body, Depends, HTTPException, Response
 from pydantic import EmailStr
 
@@ -38,11 +36,7 @@ async def verify_email(token: str) -> Response:
     user = await user_from_token(token)
     if user is None:
         raise HTTPException(404, "No user found with that email")
-    if user.email_confirmed_at is not None:
-        raise HTTPException(400, "Email is already verified")
-    if user.disabled:
-        raise HTTPException(400, "Your account is disabled")
-    user.email_confirmed_at = datetime.now(tz=UTC)
+    user.validate_email()
     await user.save()
     return Response(status_code=200)
 
