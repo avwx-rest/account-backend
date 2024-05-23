@@ -1,23 +1,12 @@
 """Update a user's plan information."""
 
-# stdlib
-import sys
 import asyncio as aio
-from pathlib import Path
-
-# library
 import typer
-from beanie import init_beanie
-from motor.motor_asyncio import AsyncIOMotorClient
 
-sys.path.insert(0, str(Path(__file__).parent.parent.absolute()))
-
-# module
-from account.config import CONFIG  # noqa: E402
-from account.models.addon import Addon  # noqa: E402
-from account.models.plan import Plan  # noqa: E402
-from account.models.user import User  # noqa: E402
-from account.util.stripe import change_subscription, cancel_subscription  # noqa: E402
+from loader import load_models
+from account.models.addon import Addon
+from account.models.user import Plan, User
+from account.util.stripe import change_subscription, cancel_subscription
 
 
 async def _change_plan(user: User, plan: Plan, remove_addons: bool) -> int:
@@ -39,8 +28,7 @@ async def _change_plan(user: User, plan: Plan, remove_addons: bool) -> int:
 
 async def main(email: str, plan: str, remove_addons: bool) -> int:
     """Update a user's plan information."""
-    db = AsyncIOMotorClient(CONFIG.mongo_uri).account
-    await init_beanie(db, document_models=[Addon, Plan, User])  # type: ignore[arg-type]
+    await load_models(Addon, Plan, User)
 
     user = await User.by_email(email)
     if not user:

@@ -1,30 +1,32 @@
 """Verify a user's email."""
 
-# stdlib
-from datetime import datetime, UTC
-from os import environ
-
-# library
+import asyncio as aio
 import typer
-from dotenv import load_dotenv
-from pymongo import MongoClient
 
-load_dotenv()
+from loader import load_models
+from account.models.user import Plan, User
+
+
+async def main(email: str) -> int:
+    """Force validates a user's email."""
+    await load_models(User, Plan)
+    user = await User.by_email(email)
+    if not user:
+        print(f"User with email {email} does not exist")
+        return 1
+    try:
+        user.validate_email()
+        await user.save()
+    except Exception as exc:
+        print(exc)
+        return 2
+    print(f"{email} has been verified")
+    return 0
 
 
 def validate_email(email: str) -> int:
     """Force validates a user's email."""
-    mdb: MongoClient = MongoClient(environ["MONGO_URI"])
-    command = {"$set": {"email_confirmed_at": datetime.now(tz=UTC)}}
-    resp = mdb.account.user.update_one({"email": email}, command)
-    if not resp.matched_count:
-        print(f"No user found for {email}")
-    elif not resp.modified_count:
-        print(f"{email} is already verified")
-    else:
-        print(f"{email} has been verified")
-        return 0
-    return 2
+    return aio.run(main(email))
 
 
 if __name__ == "__main__":
