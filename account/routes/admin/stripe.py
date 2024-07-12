@@ -10,7 +10,7 @@ from account.util.stripe import get_portal_session
 router = APIRouter(prefix="/stripe")
 
 
-@router.get("/portal", dependencies=[Depends(admin_user)])
+@router.post("/portal", dependencies=[Depends(admin_user)])
 async def get_billing_url(user: User = Depends(embedded_user)) -> JustUrl:
     """Return the Stripe account portal for another user."""
     if not (user.stripe and user.stripe.customer_id):
