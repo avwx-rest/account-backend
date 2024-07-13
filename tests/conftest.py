@@ -21,8 +21,8 @@ from account.main import app  # noqa: E402
 
 async def clear_database(server: FastAPI) -> None:
     """Empty the test database."""
-    async for collection in await server.db.list_collections():  # type: ignore[attr-defined]
-        await server.db[collection["name"]].delete_many({})  # type: ignore[attr-defined]
+    async for collection in await server.state.db.list_collections():  # type: ignore[attr-defined]
+        await server.state.db[collection["name"]].delete_many({})  # type: ignore[attr-defined]
 
 
 @pytest_asyncio.fixture()
