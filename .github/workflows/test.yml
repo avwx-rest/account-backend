@@ -36,4 +36,13 @@ jobs:
       - uses: ./.github/actions/python-hatch-env
         with:
           python-version: ${{ matrix.python-version }}
-      - run: hatch test --python ${{ matrix.python-version }}
+      - name: Run Tests
+        env:
+          MAIL_CONSOLE: true
+          MONGO_URI: none
+          SALT: ${{ secrets.SALT }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          TEST_MONGO_URI: ${{ secrets.TEST_MONGO_URI }}
+          MC_KEY: ${{ secrets.MC_KEY }}
+          MC_USERNAME: ${{ secrets.MC_USERNAME }}
+        run: hatch test --python ${{ matrix.python-version }}
