@@ -26,7 +26,7 @@ class PlanOut(BaseModel):
     def __hash__(self) -> int:
         return hash(self.key)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not other:
             return False
         if isinstance(other, str):
@@ -71,6 +71,6 @@ class Plan(Document, PlanOut):
         return await cls.find_one(cls.key == key)
 
     @classmethod
-    async def by_stripe_id(cls, id: str) -> Self | None:
+    async def by_stripe_id(cls, plan_id: str) -> Self | None:
         """Get a plan by Stripe product ID."""
-        return await cls.find_one(cls.stripe_id == id)
+        return await cls.find_one(cls.stripe_id == plan_id)

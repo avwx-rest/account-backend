@@ -9,7 +9,7 @@ from tests.data import add_empty_user, add_token_user
 from tests.util import auth_headers
 
 
-def assert_app_token(token: dict, name: str = "Token", active: bool = True) -> None:
+def assert_app_token(token: dict, name: str = "Token", *, active: bool = True) -> None:
     """Check for default token values."""
     assert token["name"] == name
     assert token["type"] == "app"

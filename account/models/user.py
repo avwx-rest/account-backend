@@ -1,6 +1,6 @@
 """User models."""
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from secrets import token_urlsafe
 from typing import Annotated, Any, Self
 
@@ -47,14 +47,14 @@ class UserToken(Token):
         self.value = value
 
     @classmethod
-    async def new(cls, name: str = "Token", type: str = "app") -> "UserToken":
+    async def new(cls, name: str = "Token", type: str = "app") -> Self:  # noqa A002
         """Generate a new unique token."""
         token = cls(_id=ObjectId(), name=name, type=type, value="")  # type: ignore[arg-type]
         await token.refresh()
         return token
 
     @classmethod
-    async def dev(cls) -> "UserToken":
+    async def dev(cls) -> Self:
         """Generate a new development token."""
         return await cls.new("Development", "dev")
 
@@ -155,9 +155,9 @@ class User(Document, UserOut):
         return await cls.find_one(cls.email == email)
 
     @classmethod
-    async def by_customer_id(cls, id: str) -> Self | None:
+    async def by_customer_id(cls, user_id: str) -> Self | None:
         """Get a user by Stripe customer ID."""
-        return await cls.find_one(cls.stripe.customer_id == id)  # type: ignore
+        return await cls.find_one(cls.stripe.customer_id == user_id)  # type: ignore
 
     @classmethod
     async def from_stripe_session(cls, session: Session) -> Self | None:
@@ -171,26 +171,18 @@ class User(Document, UserOut):
     def get_token(self, value: str) -> tuple[int, UserToken | None]:
         """Return a token and index by its id."""
         return next(
-            (
-                (i, token)
-                for i, token in enumerate(self.tokens)
-                if str(token.id) == value
-            ),
+            ((i, token) for i, token in enumerate(self.tokens) if str(token.id) == value),
             (-1, None),
         )
 
     def get_notification(self, value: str) -> tuple[int, Notification | None]:
         """Return a notification and index by its string value."""
         return next(
-            (
-                (i, notification)
-                for i, notification in enumerate(self.notifications)
-                if notification.id == value
-            ),
+            ((i, notification) for i, notification in enumerate(self.notifications) if notification.id == value),
             (-1, None),
         )
 
-    async def add_notification(self, type: str, text: str) -> None:
+    async def add_notification(self, type: str, text: str) -> None:  # noqa A002
         """Add a new notification to the user's list."""
         self.notifications.append(Notification(type=type, text=text))
         await self.save()

@@ -5,13 +5,13 @@ import sys
 from pathlib import Path
 
 # library
-from beanie import init_beanie, Document
+from beanie import Document, init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 
 sys.path.insert(0, str(Path(__file__).parent.parent.absolute()))
 
 # module
-from account.config import CONFIG  # noqa: E402
+from account.config import CONFIG
 
 
 async def load_models(*model: Document) -> None:

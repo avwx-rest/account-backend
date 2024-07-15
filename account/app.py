@@ -4,18 +4,17 @@ from contextlib import asynccontextmanager
 
 import logfire
 import rollbar
-from rollbar.contrib.fastapi import ReporterMiddleware
-from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
 from beanie import init_beanie
+from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
+from rollbar.contrib.fastapi import ReporterMiddleware
+from starlette.middleware.cors import CORSMiddleware
 
+from account.config import CONFIG
 from account.models.addon import Addon
 from account.models.plan import Plan
 from account.models.token import TokenUsage
 from account.models.user import User
-from account.config import CONFIG
-
 
 DESCRIPTION = """
 This API powers the account management portal
@@ -33,10 +32,10 @@ It supports:
 async def lifespan(app: FastAPI):  # type: ignore
     """Initialize application services."""
     # Init Database
-    client = AsyncIOMotorClient(CONFIG.mongo_uri.strip('"'))
-    app.state.db = client[CONFIG.database]  # type: ignore[attr-defined]
+    client: AsyncIOMotorClient = AsyncIOMotorClient(CONFIG.mongo_uri.strip('"'))
+    app.state.db = client[CONFIG.database]
     documents = [Addon, Plan, TokenUsage, User]
-    await init_beanie(app.state.db, document_models=documents)  # type: ignore[arg-type,attr-defined]
+    await init_beanie(app.state.db, document_models=documents)  # type: ignore
     print("Startup complete")
     yield
     print("Shutdown complete")

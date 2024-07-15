@@ -3,14 +3,13 @@
 import asyncio as aio
 import json
 import random
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from account.models.plan import Plan
 from account.models.token import TokenUsage
 from account.models.user import Notification, User, UserToken
 from account.util.password import hash_password
-
 
 DATA = Path(__file__).parent / "data"
 PLANS = json.load(DATA.joinpath("plans.json").open())
@@ -56,7 +55,7 @@ async def add_empty_user() -> str:
     return user.email
 
 
-async def add_token_user(history: bool = False) -> str:
+async def add_token_user(*, history: bool = False) -> str:
     """Add user with an app token to user collection."""
     user = make_user("token@test.io", offset=7)
     token = await UserToken.new()

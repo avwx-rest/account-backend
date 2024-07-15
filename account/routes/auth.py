@@ -8,7 +8,6 @@ from account.models.auth import AccessToken, RefreshToken
 from account.models.user import User, UserAuth
 from account.util.password import hash_password
 
-
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 

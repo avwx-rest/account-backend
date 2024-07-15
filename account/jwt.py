@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from fastapi_jwt import JwtAuthorizationCredentials, JwtAccessBearer, JwtRefreshBearer
+from fastapi_jwt import JwtAccessBearer, JwtAuthorizationCredentials, JwtRefreshBearer
 
 from account.config import CONFIG
 from account.models.user import User
@@ -30,5 +30,5 @@ async def user_from_credentials(auth: JwtAuthorizationCredentials) -> User | Non
 
 async def user_from_token(token: str) -> User | None:
     """Return the user associated with a token value."""
-    payload = access_security._decode(token)
+    payload = access_security._decode(token)  # noqa SLF001
     return await User.by_email(payload["subject"]["username"])

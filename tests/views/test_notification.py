@@ -17,7 +17,7 @@ async def test_get_notifications(client: AsyncClient) -> None:
     assert resp.status_code == 200
     notifications = resp.json()
     assert len(notifications) == len(text)
-    for value, notification in zip(text, notifications):
+    for value, notification in zip(text, notifications, strict=True):
         assert notification["type"] == "app"
         assert notification["text"] == value
         assert "timestamp" in notification

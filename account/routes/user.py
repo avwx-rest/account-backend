@@ -3,8 +3,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, Security
 from fastapi_jwt import JwtAuthorizationCredentials
 
-from account.models.user import User, UserOut, UserUpdate
 from account.jwt import access_security
+from account.models.user import User, UserOut, UserUpdate
 from account.util.current_user import current_user
 from account.util.mail import send_email_change
 from account.util.mailing import update_mailing
@@ -23,15 +23,15 @@ async def get_user(user: User = Depends(current_user)) -> User:
 async def update_user(update: UserUpdate, user: User = Depends(current_user)) -> User:
     """Update allowed user fields."""
     fields = update.model_dump(exclude_unset=True)
-    if new_email := fields.pop("email", None):
-        if new_email != user.email:
-            if await User.by_email(new_email) is not None:
-                raise HTTPException(400, "Email already exists")
-            if user.subscribed:
-                await update_mailing(user.email, new_email)
-            update_stripe_email(user, new_email)
-            await send_email_change(user.email, new_email)
-            user.update_email(new_email)
+    new_email = fields.pop("email", None)
+    if new_email and new_email != user.email:
+        if await User.by_email(new_email) is not None:
+            raise HTTPException(400, "Email already exists")
+        if user.subscribed:
+            await update_mailing(user.email, new_email)
+        update_stripe_email(user, new_email)
+        await send_email_change(user.email, new_email)
+        user.update_email(new_email)
     user = user.model_copy(update=fields)
     await user.save()
     return user

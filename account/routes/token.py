@@ -1,6 +1,6 @@
 """Token management router."""
 
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 
 from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -35,9 +35,7 @@ async def new_token(user: User = Depends(current_user)) -> UserToken:
 
 
 @router.get("/history")
-async def get_all_history(
-    days: int = 30, user: User = Depends(current_user)
-) -> list[AllTokenUsageOut]:
+async def get_all_history(days: int = 30, user: User = Depends(current_user)) -> list[AllTokenUsageOut]:
     """Return all recent token history."""
     return await token_usage_for(user, days)
 
@@ -52,9 +50,7 @@ async def get_token(value: str, user: User = Depends(current_user)) -> UserToken
 
 
 @router.patch("/{value}", response_model=Token)
-async def update_token(
-    value: str, update: TokenUpdate, user: User = Depends(current_user)
-) -> UserToken:
+async def update_token(value: str, update: TokenUpdate, user: User = Depends(current_user)) -> UserToken:
     """Update token details by string value."""
     i, token = user.get_token(value)
     if token is None:
@@ -88,14 +84,10 @@ async def refresh_token(value: str, user: User = Depends(current_user)) -> UserT
 
 
 @router.get("/{value}/history", response_model=list[TokenUsageOut])
-async def get_token_history(
-    value: str, days: int = 30, user: User = Depends(current_user)
-) -> list[TokenUsage]:
+async def get_token_history(value: str, days: int = 30, user: User = Depends(current_user)) -> list[TokenUsage]:
     """Return a token's usage history."""
     _, token = user.get_token(value)
     if token is None:
         raise HTTPException(404, f"Token with value {value} does not exist")
     days_since = datetime.now(tz=UTC) - timedelta(days=days)
-    return await TokenUsage.find(
-        TokenUsage.token_id == ObjectId(token.id), TokenUsage.date >= days_since
-    ).to_list()
+    return await TokenUsage.find(TokenUsage.token_id == ObjectId(token.id), TokenUsage.date >= days_since).to_list()

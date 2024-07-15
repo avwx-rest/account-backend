@@ -3,12 +3,11 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, Response
 from pydantic import EmailStr
 
-from account.models.user import User
 from account.jwt import access_security, user_from_token
+from account.models.user import User
 from account.util.current_user import current_user
 from account.util.mail import send_verification_email
 from account.util.mailing import add_to_mailing, remove_from_mailing
-
 
 router = APIRouter(prefix="/mail", tags=["Mail"])
 

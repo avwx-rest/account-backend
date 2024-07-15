@@ -5,7 +5,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from account.models.plan import Plan, PlanOut
 from account.models.user import User
 from account.util.current_user import current_user
-from account.util.stripe import get_session, change_subscription, cancel_subscription
+from account.util.stripe import cancel_subscription, change_subscription, get_session
 
 router = APIRouter(prefix="/plan", tags=["Plan"])
 
@@ -21,7 +21,7 @@ async def get_user_plan(user: User = Depends(current_user)) -> Plan:
 @router.post("")
 async def change_plan(  # type: ignore[no-untyped-def]
     key: str = Body(..., embed=True),
-    remove_addons: bool = Body(True, embed=True),
+    remove_addons: bool = Body(True, embed=True),  # noqa FBT001
     user: User = Depends(current_user),
 ):
     """Change the user's current plan. Returns Stripe session if Checkout is required."""

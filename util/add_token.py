@@ -1,9 +1,10 @@
 """Create a new API token for a user."""
 
 import asyncio as aio
-import typer
 
+import typer
 from loader import load_models
+
 from account.models.user import Plan, User, UserToken
 
 

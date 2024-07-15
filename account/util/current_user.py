@@ -3,8 +3,8 @@
 from fastapi import Body, HTTPException, Security
 from fastapi_jwt import JwtAuthorizationCredentials
 
-from account.models.user import User
 from account.jwt import access_security, user_from_credentials
+from account.models.user import User
 
 
 async def current_user(

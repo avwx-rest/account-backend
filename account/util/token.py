@@ -1,6 +1,6 @@
 """Shared token utilities."""
 
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 
 from bson.objectid import ObjectId
 

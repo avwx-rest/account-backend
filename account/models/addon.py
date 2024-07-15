@@ -50,7 +50,8 @@ class Addon(Document, AddonOut):
             key = "yearly" if plan.endswith("-year") else "monthly"
             price = self.price_ids.get(key)
         if not price:
-            raise ValueError(f"Unknown addon price for {plan} and {key}")
+            msg = f"Unknown addon price for {plan} and {key}"
+            raise ValueError(msg)
         return UserAddon(
             key=self.key,
             name=self.name,

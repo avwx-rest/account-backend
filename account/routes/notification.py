@@ -23,9 +23,7 @@ async def delete_notifications(user: User = Depends(current_user)) -> Response:
 
 
 @router.delete("/{value}")
-async def delete_notification(
-    value: str, user: User = Depends(current_user)
-) -> Response:
+async def delete_notification(value: str, user: User = Depends(current_user)) -> Response:
     """Delete a single notification."""
     i, _ = user.get_notification(value)
     if i < 0:

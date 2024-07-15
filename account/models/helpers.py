@@ -3,13 +3,16 @@
 from collections.abc import Callable, Iterator
 from typing import Any
 
-from bson.objectid import ObjectId, InvalidId
+from bson.objectid import InvalidId, ObjectId
+
 # from pydantic_core import core_schema
 # from pydantic import GetCoreSchemaHandler
 
 
 class ObjectIdStr(str):
     """Represents an ObjectId not managed by Beanie."""
+
+    __slots__ = ()
 
     @classmethod
     def __get_validators__(cls) -> Iterator[Callable[[Any, Any], str]]:
@@ -21,7 +24,8 @@ class ObjectIdStr(str):
         try:
             ObjectId(str(value))
         except InvalidId as exc:
-            raise ValueError("Not a valid ObjectId") from exc
+            msg = "Not a valid ObjectId"
+            raise ValueError(msg) from exc
         return str(value)
 
     # Pydantic v2 -> v3 requirement

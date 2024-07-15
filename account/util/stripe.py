@@ -9,15 +9,12 @@ from account.models.plan import Plan
 from account.models.user import Stripe, User, UserToken
 from account.util import mail
 
-
 stripe.api_key = CONFIG.stripe_secret_key
 _SUCCESS_URL = f"{CONFIG.root_url}/stripe/success"
 _CANCEL_URL = f"{CONFIG.root_url}/stripe/cancel"
 
 
-def get_session(
-    user: User, price_id: str, metered: bool = False
-) -> stripe.checkout.Session:
+def get_session(user: User, price_id: str, *, metered: bool = False) -> stripe.checkout.Session:
     """Create a Stripe Session object to start a Checkout."""
     if metered:
         item = stripe.checkout.Session.CreateParamsLineItem(price=price_id)
@@ -53,7 +50,8 @@ def get_event(payload: str | bytes, sig: str) -> Event:
 def get_portal_session(user: User) -> stripe.billing_portal.Session:
     """Create a Stripe billing portal session."""
     if user.stripe is None:
-        raise ValueError("Cannot create billing session without stripe info")
+        msg = "Cannot create billing session without stripe info"
+        raise ValueError(msg)
     return stripe.billing_portal.Session.create(
         customer=user.stripe.customer_id,
         return_url=f"{CONFIG.root_url}/plans",
@@ -63,7 +61,8 @@ def get_portal_session(user: User) -> stripe.billing_portal.Session:
 def get_subscription(session: stripe.checkout.Session) -> Subscription:
     """Load Stripe subscription from checkout session."""
     if not session.subscription:
-        raise ValueError("No subscription found after checkout session.")
+        msg = "No subscription found after checkout session."
+        raise ValueError(msg)
     if isinstance(session.subscription, Subscription):
         return session.subscription
     return Subscription.retrieve(session.subscription)
@@ -72,10 +71,9 @@ def get_subscription(session: stripe.checkout.Session) -> Subscription:
 def get_customer_id(session: stripe.checkout.Session | Invoice) -> str:
     """Load customer ID from Stripe objects."""
     if not session.customer:
-        raise ValueError("No customer ID found after checkout session.")
-    return (
-        session.customer if isinstance(session.customer, str) else session.customer.id
-    )
+        msg = "No customer ID found after checkout session."
+        raise ValueError(msg)
+    return session.customer if isinstance(session.customer, str) else session.customer.id
 
 
 async def new_subscription(session: stripe.checkout.Session) -> bool:
@@ -90,9 +88,7 @@ async def new_subscription(session: stripe.checkout.Session) -> bool:
         user.plan = plan
         token = await UserToken.new(type="dev")
         user.tokens.append(token)
-    elif addon := await Addon.by_product_id(
-        price.product if isinstance(price.product, str) else price.product.id
-    ):
+    elif addon := await Addon.by_product_id(price.product if isinstance(price.product, str) else price.product.id):
         user.addons.append(addon.to_user(user.plan.key))
     else:
         return False
@@ -111,23 +107,18 @@ async def change_subscription(user: User, plan: Plan) -> bool:
     sub = Subscription.retrieve(sub_id)
     # Update existing subscription items
     for item in sub["items"].data:
-        addon_id = (
-            item.price.product
-            if isinstance(item.price.product, str)
-            else item.price.product.id
-        )
+        addon_id = item.price.product if isinstance(item.price.product, str) else item.price.product.id
         if addon := await Addon.by_product_id(addon_id):
             user_addon = addon.to_user(plan.key)
             if user_addon.price_id != item.price.id:
                 user.replace_addon(user_addon)
-                items.append(
-                    Subscription.ModifyParamsItem(id=item.id, price=user_addon.price_id)
-                )
+                items.append(Subscription.ModifyParamsItem(id=item.id, price=user_addon.price_id))
         elif plan.stripe_id:
             # This updates an existing paid plan
             items.append(Subscription.ModifyParamsItem(id=item.id, plan=plan.stripe_id))
         else:
-            raise ValueError("Unable to find a stripe product ID to modify")
+            msg = "Unable to find a stripe product ID to modify"
+            raise ValueError(msg)
     sub.modify(
         sub_id,
         cancel_at_period_end=False,
@@ -142,7 +133,7 @@ async def change_subscription(user: User, plan: Plan) -> bool:
     return True
 
 
-async def cancel_subscription(user: User, keep_addons: bool = False) -> bool:
+async def cancel_subscription(user: User, *, keep_addons: bool = False) -> bool:
     """Cancel a subscription."""
     if user.stripe is None or user.plan is None:
         return False
@@ -160,34 +151,22 @@ async def cancel_subscription(user: User, keep_addons: bool = False) -> bool:
 
 def add_to_subscription(user: User, price_id: str) -> bool:
     """Add an addon to an existing subscription."""
-    if (
-        not user.has_subscription
-        or user.stripe is None
-        or user.stripe.subscription_id is None
-    ):
+    if not user.has_subscription or user.stripe is None or user.stripe.subscription_id is None:
         return False
-    stripe.SubscriptionItem.create(
-        subscription=user.stripe.subscription_id, price=price_id
-    )
+    stripe.SubscriptionItem.create(subscription=user.stripe.subscription_id, price=price_id)
     return True
 
 
 def remove_from_subscription(user: User, price_id: str | None = None) -> bool:
     """Remove an addon from a subscription."""
-    if (
-        not user.has_subscription
-        or user.stripe is None
-        or user.stripe.subscription_id is None
-    ):
+    if not user.has_subscription or user.stripe is None or user.stripe.subscription_id is None:
         return False
     sub = Subscription.retrieve(user.stripe.subscription_id)
     for item in sub["items"].data:
         if item.price.id == price_id:
             if len(sub["items"].data) != 1:
                 return (
-                    stripe.SubscriptionItem.delete(
-                        item.id, clear_usage=item.plan.usage_type == "metered"
-                    ).deleted
+                    stripe.SubscriptionItem.delete(item.id, clear_usage=item.plan.usage_type == "metered").deleted
                     is True
                 )
             # If nothing left in subscription

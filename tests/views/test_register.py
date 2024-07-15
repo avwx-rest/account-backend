@@ -4,11 +4,10 @@ import pytest
 from httpx import AsyncClient
 
 from account.models.user import User
-
 from tests.data import add_empty_user, add_plans
 
 
-async def assert_user_count(client: AsyncClient, count: int) -> None:
+async def assert_user_count(count: int) -> None:
     """Assert the number of user documents matches the expected count."""
     assert count == await User.count()
 
@@ -17,7 +16,7 @@ async def assert_user_count(client: AsyncClient, count: int) -> None:
 async def test_new_user(client: AsyncClient) -> None:
     """Test registering a new user."""
     await add_plans("free")
-    await assert_user_count(client, 0)
+    await assert_user_count(0)
     email, password = "new@test.io", "testing1"
     auth = {"email": email, "password": password, "token": "test"}
     resp = await client.post("/register", json=auth)
@@ -28,7 +27,7 @@ async def test_new_user(client: AsyncClient) -> None:
     assert user["plan"]["key"] == "free"
     assert len(user["tokens"]) == 0
     assert len(user["addons"]) == 0
-    await assert_user_count(client, 1)
+    await assert_user_count(1)
     db_user = await User.by_email(email)
     assert db_user is not None
     assert db_user.password != password
@@ -39,11 +38,11 @@ async def test_new_user(client: AsyncClient) -> None:
 async def test_existing_user(client: AsyncClient) -> None:
     """Test registering an existing user errors."""
     email = await add_empty_user()
-    await assert_user_count(client, 1)
+    await assert_user_count(1)
     auth = {"email": email, "password": "testing1", "token": "test"}
     resp = await client.post("/register", json=auth)
     assert resp.status_code == 409
-    await assert_user_count(client, 1)
+    await assert_user_count(1)
 
 
 @pytest.mark.asyncio

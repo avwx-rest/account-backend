@@ -15,25 +15,20 @@ from account.util.stripe import (
     new_subscription,
 )
 
-
 router = APIRouter(prefix="/stripe", tags=["Stripe"])
 
 
 @router.get("/success", response_model=UserOut)
 async def stripe_success(user: User = Depends(current_user)) -> User:
     """Add success notification after sign-up."""
-    await user.add_notification(
-        "success", "Your sign-up was successful. Thank you for supporting AVWX!"
-    )
+    await user.add_notification("success", "Your sign-up was successful. Thank you for supporting AVWX!")
     return user
 
 
 @router.get("/cancel", response_model=UserOut)
 async def stripe_cancel(user: User = Depends(current_user)) -> User:
     """Add cancelled notification after sign-up."""
-    await user.add_notification(
-        "info", "It looks like you cancelled sign-up. No changes have been made"
-    )
+    await user.add_notification("info", "It looks like you cancelled sign-up. No changes have been made")
     return user
 
 
@@ -53,9 +48,7 @@ _EVENTS = {
 
 
 @router.post("/fulfill")
-async def stripe_fulfill(
-    request: Request, stripe_signature: str = Header(None)
-) -> Response:
+async def stripe_fulfill(request: Request, stripe_signature: str = Header(None)) -> Response:
     """Stripe event handler."""
     try:
         event = get_event(await request.body(), stripe_signature)

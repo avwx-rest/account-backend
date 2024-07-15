@@ -1,10 +1,9 @@
 # account-backend
 
 [![python](https://img.shields.io/badge/Python-3.12-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
-[![Nox](https://github.com/avwx-rest/account-backend/actions/workflows/nox.yml/badge.svg)](https://github.com/avwx-rest/account-backend/actions/workflows/nox.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688.svg?style=flat&logo=FastAPI&logoColor=white)](https://fastapi.tiangolo.com)
+[![Hatch project](https://img.shields.io/badge/%F0%9F%A5%9A-Hatch-4051b5.svg)](https://github.com/pypa/hatch)
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 AVWX account management backend service
@@ -31,15 +30,15 @@ It's built on top of these libraries to provide those features:
 
 ## Setup
 
-This codebase was written for Python 3.11 and above. Don't forget about a venv as well. The `python` commands below assume you're pointing to your desired Python3 target.
+This codebase was written for Python 3.12 and above. Don't forget about a venv as well. The `python` commands below assume you're pointing to your desired Python3 target.
 
-First we'll need to install our requirements.
+We use [hatch]() to manage all of our tooling and sub-environments, but you may still wish to install the requirements if you want things like autocomplete to work in your code editor of choice.
 
 ```bash
 python -m pip install -e .
 ```
 
-Before we run the server, there is one config variable you'll need to generate the password salt. To do this, just run the script in this repo.
+Before we run the server, there is one config variable you'll need to generate: the password salt. To do this, just run the script in this repo.
 
 ```bash
 cp sample.env .env
@@ -53,7 +52,7 @@ There are other settings in `config.py` and the included `.env` file. Assuming y
 The API uses [uvicorn]() as our ASGI web server. This allows us to run our server code in a much more robust and configurable environment than the development server. For example, ASGI servers let you run multiple workers that recycle themselves after a set amount of time or number of requests.
 
 ```bash
-uvicorn account.main:app --reload --port 8080
+hatch run serve:reload
 ```
 
 Your API should now be available at http://localhost:8080
@@ -67,32 +66,21 @@ docker run -p 8080:8080 avwx-account
 
 ## Develop
 
-This codebase is uses [mypy]() for type checking and [ruff]() for everything else. Install both with the dev tag.
-
-```bash
-python -m pip install -e .[dev]
-```
+This codebase is uses [mypy]() for type checking and [hatch]() for everything else.
 
 To run the type checker:
 
 ```bash
-mypy account
+hatch run types:check
 ```
 
 To run the linter and code formatter:
 
 ```bash
-ruff check account
-ruff format account
+hatch fmt
 ```
 
 ## Test
-
-Make sure to install the requirements found in the test folder before trying to run the tests.
-
-```bash
-python -m pip install -e .[test]
-```
 
 The tests need access to a [MongoDB]() store that is emptied at the end of each test. The easiest way to do this is to run a Mongo container in the background.
 
@@ -105,7 +93,7 @@ You can also connect to a remote server if you're running tests in a CI/CD pipel
 Then just run the test suite.
 
 ```bash
-pytest
+hatch test
 ```
 
 [MongoDB]: https://www.mongodb.com "MongoDB NoSQL homepage"
@@ -117,4 +105,4 @@ pytest
 [fastapi-mail]: https://github.com/sabuhish/fastapi-mail "FastAPI mail server"
 [uvicorn]: https://www.uvicorn.org "Uvicorn ASGI web server"
 [mypy]: https://www.mypy-lang.org "mypy Python type checker"
-[ruff]: https://docs.astral.sh/ruff/ "Ruff code linter and formatter"
+[hatch]: https://hatch.pypa.io/latest/ "Hatch project and tooling manager"

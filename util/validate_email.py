@@ -1,9 +1,10 @@
 """Verify a user's email."""
 
 import asyncio as aio
-import typer
 
+import typer
 from loader import load_models
+
 from account.models.user import Plan, User
 
 
@@ -14,12 +15,8 @@ async def main(email: str) -> int:
     if not user:
         print(f"User with email {email} does not exist")
         return 1
-    try:
-        user.validate_email()
-        await user.save()
-    except Exception as exc:
-        print(exc)
-        return 2
+    user.validate_email()
+    await user.save()
     print(f"{email} has been verified")
     return 0
 

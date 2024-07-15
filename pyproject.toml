@@ -23,15 +23,48 @@ dependencies = [
     "uvicorn==0.29.0",
 ]
 
-[project.optional-dependencies]
-dev = ["mypy", "ruff"]
-test = [
-    "asgi-lifespan~=2.1",
-    "pytest-asyncio~=0.23",
+[project.urls]
+Issues = "https://github.com/avwx-rest/account-backend/issues"
+Source = "https://github.com/avwx-rest/account-backend"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+    "mypy>=1.0.0"
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:account tests}"
+
+[tool.hatch.envs.hatch-test]
+extra-dependencies = [
+    "asgi-lifespan>=2.1",
+    "pytest-asyncio>=0.23",
+    "pytest-cov",
 ]
 
-[project.urls]
-"Source" = "https://github.com/avwx-rest/account-backend"
+[tool.hatch.envs.serve.scripts]
+main = "uvicorn account.main:app --port {args:8080}"
+reload = "uvicorn account.main:app --reload --port {args:8080}"
+
+[tool.pytest.ini_options]
+addopts = """\
+    --cov account \
+    --cov tests \
+    --cov-report term-missing \
+    --no-cov-on-fail \
+"""
+
+[tool.coverage.run]
+source_pkgs = ["account", "tests"]
+branch = true
+parallel = true
+
+[tool.coverage.report]
+fail_under = 65  # increase over time
+exclude_lines = [
+    "no cov",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
 
 [tool.mypy]
 check_untyped_defs = true
@@ -47,12 +80,11 @@ warn_return_any = true
 warn_unused_ignores = true
 
 [tool.ruff]
-lint.extend-select = [
-    "UP",
-    "D",
-]
 lint.ignore = [
     "D105",
     "D203",
     "D213",
+    "B008", # Depends in func def
+    "T201",
+    "INP001",
 ]

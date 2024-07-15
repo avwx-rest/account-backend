@@ -1,8 +1,8 @@
 """reCaptcha verification."""
 
 from httpx import AsyncClient
-from account.config import CONFIG
 
+from account.config import CONFIG
 
 THRESHOLD = 0.6
 TIMEOUT = 10
@@ -21,7 +21,7 @@ async def verify(token: str) -> bool:
                 "secret": CONFIG.recaptcha_secret_key,
             },
         )
-    data = resp.json()
+    data: dict = resp.json()
     if data.get("success") is not True:
         return False
     score = data.get("score")

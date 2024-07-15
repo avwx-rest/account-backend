@@ -1,6 +1,6 @@
 """Mail server config."""
 
-from fastapi_mail import FastMail, ConnectionConfig, MessageSchema, MessageType
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 
 from account.config import CONFIG
 
@@ -52,15 +52,14 @@ Your account has been disabled after two failed attempts, and your account token
 ACCOUNT_ENABLE = "Just letting you know that your account has been re-enabled and your API tokens activated. No further action is required."
 
 CHANGE_EMAIL_OLD = "Your AVWX account email has been changed to {}. If you did not make this change, please contact avwx@dupont.dev immediately."
-CHANGE_EMAIL_NEW = (
-    "Your AVWX account email has been changed. No further action is needed."
-)
+CHANGE_EMAIL_NEW = "Your AVWX account email has been changed. No further action is needed."
 
 
 async def _send(email: str, title: str, msg: str) -> None:
     """Send to email or print to console."""
     if CONFIG.mail_console:
-        return print(msg)
+        print(msg)
+        return
     message = MessageSchema(
         recipients=[email],
         subject=title,
@@ -68,6 +67,7 @@ async def _send(email: str, title: str, msg: str) -> None:
         subtype=MessageType.plain,
     )
     await mail.send_message(message)
+    return None
 
 
 async def send_verification_email(email: str, token: str) -> None:
@@ -84,9 +84,7 @@ async def send_password_reset_email(email: str, token: str) -> None:
     await _send(email, "AVWX Password Reset", RESET_TEMPLATE.format(url))
 
 
-async def send_disable_email(
-    email: str, portal_url: str, warning: bool = False
-) -> None:
+async def send_disable_email(email: str, portal_url: str, *, warning: bool = False) -> None:
     """Send missed payment email with portal link."""
     title = "AVWX Account "
     if warning:

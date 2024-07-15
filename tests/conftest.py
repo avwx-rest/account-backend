@@ -6,10 +6,9 @@ import pytest_asyncio
 from asgi_lifespan import LifespanManager
 from decouple import config
 from fastapi import FastAPI
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from account.config import CONFIG
-
 
 # Override config settings before loading the app
 CONFIG.testing = True
@@ -21,20 +20,16 @@ from account.main import app  # noqa: E402
 
 async def clear_database(server: FastAPI) -> None:
     """Empty the test database."""
-    async for collection in await server.state.db.list_collections():  # type: ignore[attr-defined]
-        await server.state.db[collection["name"]].delete_many({})  # type: ignore[attr-defined]
+    async for collection in await server.state.db.list_collections():
+        await server.state.db[collection["name"]].delete_many({})
 
 
 @pytest_asyncio.fixture()
 async def client() -> AsyncIterator[AsyncClient]:
     """Async server client that handles lifespan and teardown."""
-    async with LifespanManager(app):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as _client:
+    async with LifespanManager(app):  # noqa SIM117
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as _client:  # type: ignore
             try:
                 yield _client
-            except Exception as exc:
-                print(exc)
             finally:
                 await clear_database(app)

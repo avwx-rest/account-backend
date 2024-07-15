@@ -3,9 +3,9 @@
 import hashlib
 
 import rollbar
+from kewkew import Kew
 from mailchimp3 import MailChimp
 from mailchimp3.mailchimpclient import MailChimpError
-from kewkew import Kew
 
 from account.config import CONFIG
 from account.models.user import User
@@ -31,6 +31,9 @@ if not CONFIG.testing:
     kew = MailingKew()
     if CONFIG.mc_key and CONFIG.mc_username:
         chimp = MailChimp(mc_api=CONFIG.mc_key, mc_user=CONFIG.mc_username)
+
+
+NOT_FOUND = 404
 
 
 async def add_to_mailing(user: User) -> None:
@@ -67,11 +70,11 @@ async def remove_from_mailing(user: User) -> None:
 
 def _remove_from_mailing(email: str) -> bool:
     try:
-        target = hashlib.md5(email.encode("utf-8")).hexdigest()
+        target = hashlib.md5(email.encode("utf-8")).hexdigest()  # noqa S324
         chimp.lists.members.delete(CONFIG.mc_list_id, target)
     except MailChimpError as exc:
         data = dict(exc.args[0])
-        if data.get("status") != 404:
+        if data.get("status") != NOT_FOUND:
             rollbar.report_message(data)
     return True
 
@@ -84,7 +87,7 @@ async def update_mailing(old: str, new: str) -> None:
 
 def _update_mailing(old: str, new: str) -> None:
     try:
-        target = hashlib.md5(old.encode("utf-8")).hexdigest()
+        target = hashlib.md5(old.encode("utf-8")).hexdigest()  # noqa S324
         chimp.lists.members.update(
             CONFIG.mc_list_id,
             target,
@@ -92,5 +95,5 @@ def _update_mailing(old: str, new: str) -> None:
         )
     except MailChimpError as exc:
         data = dict(exc.args[0])
-        if data.get("status") != 404:
+        if data.get("status") != NOT_FOUND:
             rollbar.report_message(data)

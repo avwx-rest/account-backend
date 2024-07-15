@@ -6,8 +6,8 @@ from account.models.addon import Addon, AddonOut, UserAddon
 from account.models.user import User
 from account.util.current_user import current_user
 from account.util.stripe import (
-    get_session,
     add_to_subscription,
+    get_session,
     remove_from_subscription,
 )
 
@@ -21,9 +21,7 @@ async def get_user_addons(user: User = Depends(current_user)) -> list[UserAddon]
 
 
 @router.post("/{key}")
-async def new_addon(  # type: ignore[no-untyped-def]
-    key: str, user: User = Depends(current_user)
-):
+async def new_addon(key: str, user: User = Depends(current_user)):  # type: ignore
     """Add a new addon to user by key. Returns a Stripe session if Checkout is required."""
     addon = await Addon.by_key(key)
     if addon is None:
@@ -31,7 +29,8 @@ async def new_addon(  # type: ignore[no-untyped-def]
     if user.has_addon(addon.key):
         raise HTTPException(400, f"User already has the {addon.key} addon")
     if user.plan is None:
-        raise ValueError("Cannot add addon to user with no plan")
+        msg = "Cannot add addon to user with no plan"
+        raise ValueError(msg)
     user_addon = addon.to_user(user.plan.key)
     if not user.has_subscription:
         return get_session(user, user_addon.price_id, metered=addon.metered)
