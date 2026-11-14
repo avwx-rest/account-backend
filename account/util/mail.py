@@ -1,21 +1,19 @@
-"""Mail server config."""
+"""Transactional email, sent through Postmark's email API."""
 
-from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
+from typing import Final
+
+import httpx
 
 from account.config import CONFIG
 
-mail_conf = ConnectionConfig(
-    MAIL_USERNAME=CONFIG.mail_username,
-    MAIL_PASSWORD=CONFIG.mail_password,
-    MAIL_FROM=CONFIG.mail_sender,
-    MAIL_PORT=CONFIG.mail_port,
-    MAIL_SERVER=CONFIG.mail_server,
-    MAIL_STARTTLS=True,
-    MAIL_SSL_TLS=False,  # StartTLS handles TLS and SSL
-    USE_CREDENTIALS=True,
-)
+POSTMARK_URL: Final = "https://api.postmarkapp.com/email"
+TIMEOUT_SECONDS: Final = 10.0
+# Enough of Postmark's own error message to diagnose a failure, not a whole page
+_ERROR_BODY_LIMIT: Final = 500
 
-mail = FastMail(mail_conf)
+
+class MailError(RuntimeError):
+    """A send was attempted and Postmark did not accept it."""
 
 
 VERIFY_TEMPLATE = """
@@ -55,19 +53,31 @@ CHANGE_EMAIL_OLD = "Your AVWX account email has been changed to {}. If you did n
 CHANGE_EMAIL_NEW = "Your AVWX account email has been changed. No further action is needed."
 
 
-async def _send(email: str, title: str, msg: str) -> None:
+async def _send(email: str, title: str, msg: str, *, transport: httpx.AsyncBaseTransport | None = None) -> None:
     """Send to email or print to console."""
     if CONFIG.mail_console:
         print(msg)
         return
-    message = MessageSchema(
-        recipients=[email],
-        subject=title,
-        body=msg,
-        subtype=MessageType.plain,
-    )
-    await mail.send_message(message)
-    return None
+    payload = {
+        "From": CONFIG.mail_sender,
+        "To": email,
+        "Subject": title,
+        "TextBody": msg,
+        "MessageStream": CONFIG.postmark_message_stream,
+    }
+    headers = {
+        "Accept": "application/json",
+        "X-Postmark-Server-Token": CONFIG.postmark_server_token,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=TIMEOUT_SECONDS, transport=transport) as client:
+            response = await client.post(POSTMARK_URL, json=payload, headers=headers)
+    except httpx.HTTPError as exc:
+        error = f"Could not reach Postmark: {exc}"
+        raise MailError(error) from exc
+    if response.status_code != httpx.codes.OK:
+        error = f"Postmark rejected the message with HTTP {response.status_code}: {response.text[:_ERROR_BODY_LIMIT]}"
+        raise MailError(error)
 
 
 async def send_verification_email(email: str, token: str) -> None:
