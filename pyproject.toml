@@ -14,6 +14,7 @@ dependencies = [
     "fastapi==0.110.0",
     "fastapi-jwt==0.2.0",
     "httpx==0.27.0",
+    "importlib-metadata==10.2.0",
     "kewkew==0.1",
     "logfire[fastapi,system-metrics,pymongo]==0.32.1",
     "mailchimp3==3.0.21",
