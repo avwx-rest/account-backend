@@ -15,13 +15,11 @@ class Settings(BaseModel):
     authjwt_secret_key: str = config("SECRET_KEY")
     salt: bytes = config("SALT").encode()
 
-    # FastMail SMTP server settings
+    # Postmark transactional email
     mail_console: bool = config("MAIL_CONSOLE", default=False, cast=bool)
-    mail_server: str = config("MAIL_SERVER", default="smtp.mailgun.org")
-    mail_port: int = config("MAIL_PORT", default=587, cast=int)
-    mail_username: str = config("MAIL_USERNAME", default="")
-    mail_password: str = config("MAIL_PASSWORD", default="")
-    mail_sender: str = config("MAIL_SENDER", default="noreply@avwx.rest")
+    mail_sender: str = config("MAIL_SENDER", default="AVWX <noreply@avwx.rest>")
+    postmark_server_token: str = config("POSTMARK_SERVER_TOKEN", default="")
+    postmark_message_stream: str = config("POSTMARK_MESSAGE_STREAM", default="outbound")
 
     # Mailchimp Mailing List
     mc_key: str = config("MC_KEY", default="")

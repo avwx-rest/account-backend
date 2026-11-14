@@ -26,7 +26,7 @@ It's built on top of these libraries to provide those features:
 - [FastAPI]() - Python async micro framework built on [Starlette]() and [PyDantic]()
 - [Beanie ODM]() - Async [MongoDB]() object-document mapper built on [PyDantic]()
 - [fastapi-jwt]() - JWT auth for [FastAPI]()
-- [fastapi-mail]() - Mail server manager for [FastAPI]()
+- [Postmark]() - Transactional email API
 
 ## Setup
 
@@ -102,7 +102,7 @@ hatch test
 [Starlette]: https://www.starlette.io "Starlette web framework"
 [PyDantic]: https://pydantic-docs.helpmanual.io "PyDantic model validation"
 [fastapi-jwt]: https://github.com/k4black/fastapi-jwt "JWT auth for FastAPI"
-[fastapi-mail]: https://github.com/sabuhish/fastapi-mail "FastAPI mail server"
+[Postmark]: https://postmarkapp.com "Postmark transactional email"
 [uvicorn]: https://www.uvicorn.org "Uvicorn ASGI web server"
 [mypy]: https://www.mypy-lang.org "mypy Python type checker"
 [hatch]: https://hatch.pypa.io/latest/ "Hatch project and tooling manager"
